@@ -1,0 +1,10 @@
+#!/bin/sh
+# Exécuté par l'installateur macOS (en root) avant la copie : ferme la Boîte à outils si elle est
+# ouverte et retire l'ancienne version. Réglages et historique, rangés dans le dossier de
+# l'utilisateur, sont conservés.
+APP="$3/Applications/Boîte à outils.app"
+/usr/bin/pkill -x BoiteAOutils 2>/dev/null && sleep 1
+if [ -d "$APP" ] && [ "$(/usr/bin/defaults read "$APP/Contents/Info" CFBundleIdentifier 2>/dev/null)" = "com.boiteaoutils.mac" ]; then
+  /bin/rm -rf "$APP"
+fi
+exit 0

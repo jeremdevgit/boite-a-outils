@@ -1,0 +1,5 @@
+#!/bin/sh
+# Exécuté par l'installateur macOS (en root) : l'app appartient au système, comme toute app installée.
+APP="$3/Applications/Boîte à outils.app"
+[ -d "$APP" ] && /usr/sbin/chown -R root:wheel "$APP" && /bin/chmod -R go-w "$APP"
+exit 0

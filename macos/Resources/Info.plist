@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key><string>fr</string>
+	<key>CFBundleExecutable</key><string>BoiteAOutils</string>
+	<key>CFBundleIdentifier</key><string>com.boiteaoutils.mac</string>
+	<key>CFBundleName</key><string>Boîte à outils</string>
+	<key>CFBundleDisplayName</key><string>Boîte à outils</string>
+	<key>CFBundleIconFile</key><string>AppIcon</string>
+	<key>CFBundlePackageType</key><string>APPL</string>
+	<key>CFBundleShortVersionString</key><string>1.5</string>
+	<key>CFBundleVersion</key><string>7</string>
+	<key>NSHumanReadableCopyright</key><string>© 2026 jeremdevgit — GPL-3.0-or-later</string>
+	<key>LSMinimumSystemVersion</key><string>14.0</string>
+	<key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
+	<key>NSHighResolutionCapable</key><true/>
+	<key>NSPrincipalClass</key><string>NSApplication</string>
+	<key>NSAppleEventsUsageDescription</key><string>La Boîte à outils pilote le Finder et System Events pour vider la corbeille, supprimer des fichiers protégés et gérer les éléments d'ouverture.</string>
+</dict>
+</plist>

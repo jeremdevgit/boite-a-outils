@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boîte à outils</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="ambient"><i></i><i></i><i></i></div>
+<svg width="0" height="0" style="position:absolute"><filter id="lens" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency=".012 .018" numOctaves="2" seed="4" result="n"/><feGaussianBlur in="n" stdDeviation="2" result="s"/><feDisplacementMap in="SourceGraphic" in2="s" scale="26" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
+
+<aside id="side">
+  <div class="brand"><img src="icon.png" alt=""><span class="label">Boîte à outils</span></div>
+  <nav id="nav">
+    <a data-view="home"><svg viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg><span class="label">Accueil</span></a>
+    <div class="sec">Démarrage et arrière-plan</div>
+    <a data-view="startup"><svg viewBox="0 0 24 24"><path d="M13 3v10h-2V3zm5.4 2.6A9 9 0 1 1 5.6 5.6l1.4 1.4a7 7 0 1 0 10 0z"/></svg><span class="label">Démarrage</span></a>
+    <a data-view="services"><svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm8.6 2.3-1.7-.3a7 7 0 0 0-.7-1.7l1-1.4-1.6-1.6-1.4 1a7 7 0 0 0-1.7-.7l-.3-1.7h-2.4l-.3 1.7a7 7 0 0 0-1.7.7l-1.4-1-1.6 1.6 1 1.4a7 7 0 0 0-.7 1.7l-1.7.3v2.4l1.7.3c.2.6.4 1.2.7 1.7l-1 1.4 1.6 1.6 1.4-1c.5.3 1.1.5 1.7.7l.3 1.7h2.4l.3-1.7c.6-.2 1.2-.4 1.7-.7l1.4 1 1.6-1.6-1-1.4c.3-.5.5-1.1.7-1.7l1.7-.3z"/></svg><span class="label">Services</span></a>
+    <a data-view="processes"><svg viewBox="0 0 24 24"><path d="M3 13h4l3-8 4 14 3-6h4v2h-3l-4 8-4-14-2 6H3z"/></svg><span class="label">Processus</span></a>
+    <div class="sec">Espace disque</div>
+    <a data-view="clean"><svg viewBox="0 0 24 24"><path d="M9 3h6l1 2h4v2H4V5h4zm-3 6h12l-1 12H7z"/></svg><span class="label">Nettoyage</span></a>
+    <a data-view="large"><svg viewBox="0 0 24 24"><path d="M4 4h16v4H4zm0 6h10v4H4zm0 6h6v4H4z"/></svg><span class="label">Fichiers lourds</span></a>
+    <a data-view="ghosts"><svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8v12l-3-2-3 2-2-2-2 2-3-2-3 2V10a8 8 0 0 1 8-8zm-3 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm6 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg><span class="label">Fichiers fantômes</span></a>
+    <div class="sec">Matériel</div>
+    <a data-view="hardware"><svg viewBox="0 0 24 24"><path d="M9 2h2v2h2V2h2v2h2a2 2 0 0 1 2 2v2h2v2h-2v2h2v2h-2v2a2 2 0 0 1-2 2h-2v2h-2v-2h-2v2H9v-2H7a2 2 0 0 1-2-2v-2H3v-2h2v-2H3V8h2V6a2 2 0 0 1 2-2h2zm-2 4v12h10V6zm2 2h6v8H9z"/></svg><span class="label">Matériel</span></a>
+    <a data-view="displays"><svg viewBox="0 0 24 24"><path d="M3 4h18a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7v2h3v2H7v-2h3v-2H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v9h16V6z"/></svg><span class="label">Écrans</span></a>
+    <a data-view="usb"><svg viewBox="0 0 24 24"><path d="M12 2l3 4h-2v9.2l3-1.8V11h-1V8h4v3h-1v3.5l-5 3v1.1a2.5 2.5 0 1 1-2 0v-3l-5-3V9.7a2 2 0 1 1 2 0v2.7l3 1.8V6H9z"/></svg><span class="label">Ports USB et câbles</span></a>
+    <a data-view="drivers"><svg viewBox="0 0 24 24"><path d="M7 2h10v4h3v6h-2v-4H6v8h6v2H4V6h3zm2 2v2h6V4zm8 11h2v3.6l1.3-1.3 1.4 1.4-3.7 3.7-3.7-3.7 1.4-1.4 1.3 1.3z"/></svg><span class="label">Pilotes</span></a>
+    <a data-view="hwplus"><svg viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm1 2v14h14V5zm2 9h2v3H7zm4-7h2v10h-2zm4 4h2v6h-2z"/></svg><span class="label">Diagnostic avancé</span></a>
+    <a data-view="sensors"><svg viewBox="0 0 24 24"><path d="M13 13.3V5a3 3 0 0 0-6 0v8.3a5 5 0 1 0 6 0zM10 20a3 3 0 0 1-1.5-5.6l.5-.3V5a1 1 0 0 1 2 0v9.1l.5.3A3 3 0 0 1 10 20zm7-15h4v2h-4zm0 4h4v2h-4zm0 4h4v2h-4z"/></svg><span class="label">Capteurs</span></a>
+    <a data-view="stress"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 2a8 8 0 0 1 7.7 6h-3.4l-2.1-3.5-3.5 7-2-4L7 12H4.1A8 8 0 0 1 12 4zm0 16a8 8 0 0 1-7.7-6H8l1.7-2.6 2.1 4.1 3.4-6.8 1 1.3h3.6A8 8 0 0 1 12 20z"/></svg><span class="label">Tests de stabilité</span></a>
+    <div class="sec">Système</div>
+    <a data-view="perf"><svg viewBox="0 0 24 24"><path d="M12 4a10 10 0 0 0-8.7 15h17.4A10 10 0 0 0 12 4zm0 2a8 8 0 0 1 7.4 11H4.6A8 8 0 0 1 12 6zm4.2 2.4-5 5.2a1.6 1.6 0 1 0 2.3 2.2z"/></svg><span class="label">Performances</span></a>
+    <a data-view="perso"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18 1.8 1.8 0 0 0 1.3-3 1.8 1.8 0 0 1 1.4-3H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8zm-5.5 9A1.5 1.5 0 1 1 8 10.5 1.5 1.5 0 0 1 6.5 12zm3-4A1.5 1.5 0 1 1 11 6.5 1.5 1.5 0 0 1 9.5 8zm5 0A1.5 1.5 0 1 1 16 6.5 1.5 1.5 0 0 1 14.5 8zm3 4a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5z"/></svg><span class="label">Personnalisation</span></a>
+    <a data-view="tweaks"><svg viewBox="0 0 24 24"><path d="M3 17h6v2H3zm0-12h10v2H3zm10 14v-2h8v-2h-8v-2h-2v6zM7 9v2H3v2h4v2h2V9zm14 4v-2H11v2zm-6-4h2V7h4V5h-4V3h-2z"/></svg><span class="label">Réglages</span></a>
+    <a data-view="godmode"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5zm-1 14-4-4 1.4-1.4L11 13.2l4.6-4.6L17 10z"/></svg><span class="label">Mode Dieu</span></a>
+    <a data-view="tools"><svg viewBox="0 0 24 24"><path d="M21.7 18.6 13 9.9a5.5 5.5 0 0 0-7.2-7l3.4 3.4-2.5 2.5L3.3 5.4a5.5 5.5 0 0 0 7 7.2l8.7 8.7a1.9 1.9 0 0 0 2.7-2.7z"/></svg><span class="label">Santé et réparation</span></a>
+    <a data-view="programs"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm11 0h2v3h3v2h-3v3h-2v-3h-3v-2h3z"/></svg><span class="label">Applications</span></a>
+    <a data-view="sysinternals"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H4zm2 2v8h12V6zm-1 12h14v2H5zm3-10 3 2-3 2zm4 3h4v1h-4z"/></svg><span class="label">Sysinternals</span></a>
+    <div class="sec">Sauvegarde et installation</div>
+    <a data-view="backup"><svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm1 2v5h7V5zm0 9v5h10v-5z"/></svg><span class="label">Sauvegarde propre</span></a>
+    <a data-view="essentials"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7zm0 2.3L6.1 7.5 12 10.8l5.9-3.3zM5 9.2v6.6l6 3.3v-6.6zm14 0-6 3.3v6.6l6-3.3z"/></svg><span class="label">Essentiels</span></a>
+    <div class="sec">Plus</div>
+    <a data-view="downloads"><svg viewBox="0 0 24 24"><path d="M11 3h2v9.2l3.6-3.6L18 10l-6 6-6-6 1.4-1.4 3.6 3.6zM4 18h16v2H4z"/></svg><span class="label">Mes logiciels</span></a>
+    <a data-view="history"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 1-9 9h2a7 7 0 1 0 2.1-5L10 9H4V3l2.6 2.6A9 9 0 0 1 13 3zm-1 5h2v4.6l3.5 2-1 1.7L12 13.8z"/></svg><span class="label">Historique</span></a>
+  </nav>
+  <div class="side-foot" id="admin-state"></div>
+</aside>
+<div id="scrim"></div>
+
+<main id="main">
+  <div id="topbar"><button id="menu-btn" class="ghost icon" title="Menu"><svg viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg></button><span id="top-title">Boîte à outils</span></div>
+  <div id="view"></div>
+</main>
+
+<div id="modal" hidden><div class="modal-box glass" id="modal-box"></div></div>
+<div id="toast" hidden></div>
+<script src="kb.js"></script>
+<script src="app.js"></script>
+<script src="hw.js"></script>
+<script src="pro.js"></script>
+<script src="disk.js"></script>
+</body>
+</html>
