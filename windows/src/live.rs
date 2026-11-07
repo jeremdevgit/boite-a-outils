@@ -47,6 +47,9 @@ fn net_bytes() -> (u64, u64) {
         }
         // MIB_IF_TABLE2 ends with a flexible array. Do not create a reference
         // to its one-element Rust declaration before extending it to NumEntries.
+        // GetIfTable2 allocates this buffer on success (Microsoft contract):
+        // https://learn.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getiftable2
+        // The null/status checks above precede all access; FreeMibTable owns cleanup.
         let count = (*t).NumEntries as usize;
         if count
             > isize::MAX as usize
@@ -164,4 +167,16 @@ pub fn sample() -> Value {
         gpu_counter: gc,
     });
     out
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn native_network_table_can_be_sampled_repeatedly() {
+        // Exercise the real Windows allocation/iteration/free contract, without
+        // collecting or printing adapter identifiers or user network traffic.
+        for _ in 0..16 {
+            let _ = super::net_bytes();
+        }
+    }
 }

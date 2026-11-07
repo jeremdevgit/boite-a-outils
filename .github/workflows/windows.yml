@@ -43,6 +43,9 @@ jobs:
       - name: Tests de sécurité de l'installation (données temporaires)
         run: cargo test --locked --manifest-path tests/install-security/Cargo.toml
 
+      - name: Test natif du tableau réseau Windows
+        run: cargo test --locked --manifest-path tests/native-metadata/Cargo.toml
+
       - name: Régressions de sécurité JavaScript
         run: node tests/security-js.cjs
 
