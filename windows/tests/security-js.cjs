@@ -46,3 +46,18 @@ async function networkTest() {
   assert.equal(messages, 1);
 }
 networkTest().then(() => console.log('Translation injection and network prototype regressions passed')).catch(e => {console.error(e); process.exitCode = 1;});
+
+const kbPath = path.join(root, ui, 'kb.js');
+if (fs.existsSync(kbPath)) {
+  const kb = vm.runInNewContext(fs.readFileSync(kbPath, 'utf8') + ';KB;', {});
+  for (const [name, positive, negative] of [
+    ['EA Anticheat (Javelin)', 'proc:eaanticheat.exe', 'svc:unrelated'],
+    ['BattlEye', 'proc:custom-battleye.exe', 'svc:unrelated'],
+    ['Microsoft Defender', 'svc:wdnissvc', 'svc:unrelated'],
+  ]) {
+    const rule = kb.find(r => r.n === name);
+    assert(rule.m.test(positive), positive);
+    assert(!rule.m.test(negative), negative);
+  }
+  console.log('Service/process identification regression passed');
+}

@@ -2,6 +2,7 @@
 
 ## Windows 2.3.1 et macOS 1.6 — 2026-11-07 — Sécurité
 
+- Identification des programmes : alternatives des expressions régulières explicitement ancrées, sans changement du classement attendu.
 - Chargement des traductions : chemins HTML constants ; lecture bornée des ressources de version et tableau réseau natif corrigé. Éditeur documenté dans EDITEUR.md.
 - Translation loading uses constant paths; version resources are bounds-checked and flexible network-table access is corrected.
 - Windows : rejet des chemins ambigus (`..`, noms de périphériques, flux alternatifs), résolution des chemins et rejet des jonctions/reparse points pour l'installation.
