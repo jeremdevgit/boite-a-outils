@@ -8,6 +8,7 @@
 - Windows : rejet des chemins ambigus (`..`, noms de périphériques, flux alternatifs), résolution des chemins et rejet des jonctions/reparse points pour l'installation.
 - Les droits réels des dossiers et de leurs parents sont vérifiés. Le propriétaire et la DACL sont explicitement protégés ; une erreur de protection arrête l'installation avant la copie des exécutables.
 - Copie vers un fichier temporaire nouveau, puis protection et vérification avant remplacement.
+- macOS : point d’entrée Swift Package pour permettre l’analyse CodeQL des sources natives.
 - CI : Actions épinglées à des SHA, compilation en lecture seule et publication isolée avec droits d'écriture. Tests de régression Windows des ACL et jonctions.
 - macOS reste en version 1.6, sans changement de binaire.
 
