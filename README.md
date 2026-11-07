@@ -2,137 +2,148 @@
 
 # Boîte à outils
 
-**Entretenir son ordinateur sans rien casser, sur Windows et sur Mac.** Démarrage, services, nettoyage, fichiers lourds, réglages cachés, matériel, capteurs, réparations : tout est expliqué en clair, rien n'est modifié sans ton accord, et chaque modification s'annule depuis l'Historique.
+**English** · [Français](README.fr.md) · [Español](README.es.md)
 
-Deux applications natives, une pour chaque système, réunies dans ce dépôt :
+**Look after your computer without breaking anything, on Windows and on Mac.** Startup, services, cleanup, large files, hidden settings, hardware, sensors, repairs: everything is explained in plain words, nothing is changed without your consent, and every change can be undone from the History.
 
-| | Windows 10 et 11 | macOS 14 et plus récent |
+**8 languages**: English, French, Spanish, German, Italian, Portuguese, Chinese and Japanese. Your Windows or Mac language is picked automatically. To switch: on Windows, the language menu at the bottom of the sidebar (instant); on Mac, *Hidden Settings › Boîte à outils › Language* (at the next launch, with a Relaunch button).
+
+Two native apps, one for each system, gathered in this repository:
+
+| | Windows 10 and 11 | macOS 14 or later |
 |---|---|---|
-| Dossier | [`windows/`](windows/) (Rust, interface web WebView2) | [`macos/`](macos/) (Swift, SwiftUI) |
-| Télécharger | `BoiteAOutils-Setup.exe` | `Boite-a-outils-<version>.pkg` ou `.dmg` |
+| Folder | [`windows/`](windows/) (Rust, WebView2 web interface) | [`macos/`](macos/) (Swift, SwiftUI) |
+| Download | `BoiteAOutils-Setup.exe` | `Boite-a-outils-<version>.pkg` or `.dmg` |
 
-👉 **[Télécharger la dernière version](https://github.com/jeremdevgit/boite-a-outils/releases/latest)**
+👉 **[Download the latest version](https://github.com/jeremdevgit/boite-a-outils/releases/latest)**
 
-![Accueil de la Boîte à outils sur Windows](captures/windows-accueil.jpg)
+![Boîte à outils home screen on Windows](captures/en/windows-accueil.png)
 
 ---
 
+## File search and list filters
+
+The **File search** tab on Windows and macOS finds files and folders by name or full path. Choose a folder or drive, build its local index, then search using several words or wildcards (`*.pdf`, `report?`). Filter by files/folders, size or modification date, sort the results, reveal an item in Explorer/Finder, or copy its path.
+
+The first scan may take several minutes. The index stays in memory for the current app session; rebuild it to include filesystem changes. Inaccessible folders are skipped and links are not traversed. Folder sizes are not calculated, and the results list shows up to 500 matches. No file content or path is sent online.
+
+Windows also has contextual filters in **Startup, Services, Processes, Apps, Sysinternals and History**, plus size filters for forgotten installers and archives. Bulk selection acts on the displayed list; changing an archive size filter clears hidden selections.
+
+![File search with demonstration data](captures/en/windows-recherche.png)
+
+![File search on macOS](captures/en/macos-recherche.png)
+
+
 ## Windows
 
-| Rubrique | Ce qu'elle fait |
+| Section | What it does |
 |---|---|
-| **Démarrage, services, processus** | Ce qui se lance avec Windows (programmes, tâches planifiées, entrées cassées), services expliqués un par un, processus avec leur consommation. |
-| **Nettoyage** | Caches et fichiers temporaires de Windows, des navigateurs, des applications et des jeux. Les éléments cochés par défaut sont sans conséquence ; les autres sont expliqués. |
-| **Fichiers lourds et fantômes** | Ce qui prend de la place, doublons, anciennes versions d'applications, installateurs oubliés, raccourcis cassés, restes de logiciels désinstallés. |
-| **Matériel** | Processeur, mémoire, cartes graphiques, disques (santé SMART), écrans, ports USB et câbles, pilotes, capteurs (températures, ventilateurs), tests de stabilité. |
-| **Performances, personnalisation, réglages** | Réglages documentés et réversibles en un clic : jeux, alimentation, barre des tâches transparente, explorateur, confidentialité, publicités. Les « astuces » sans effet mesurable sont listées avec la raison de leur absence. |
-| **Santé et réparation** | Points de restauration, vérification et réparation de Windows (SFC, DISM), outils Sysinternals, sauvegarde propre, installation des logiciels essentiels (winget). |
-| **Historique** | Chaque modification est notée et s'annule en un clic. |
-| **Mes logiciels** | Mes autres logiciels, avec le lien de téléchargement officiel. |
+| **Startup, services, processes** | What launches with Windows (programs, scheduled tasks, broken entries), services explained one by one, processes with their resource use. |
+| **Cleanup** | Caches and temporary files of Windows, browsers, apps and games. Items ticked by default are harmless; the others are explained. |
+| **Large and ghost files** | What takes up space, duplicates, old app versions, forgotten installers, broken shortcuts, leftovers of uninstalled software. |
+| **Hardware** | Processor, memory, graphics cards, drives (SMART health), displays, USB ports and cables, drivers, sensors (temperatures, fans), stability tests. |
+| **Performance, customization, settings** | Documented settings, reversible in one click: games, power, transparent taskbar, File Explorer, privacy, ads. "Tips" with no measurable effect are listed with the reason they're left out. |
+| **Health and repair** | Restore points, Windows check and repair (SFC, DISM), Sysinternals tools, clean backup, installing essential software (winget). |
+| **History** | Every change is logged and can be undone in one click. |
+| **My software** | My other software, with the official download link. |
 
-<p><img src="captures/windows-nettoyage.jpg" alt="Nettoyage" width="49%"> <img src="captures/windows-performances.jpg" alt="Performances" width="49%"></p>
-<p><img src="captures/windows-mes-logiciels.jpg" alt="Mes logiciels" width="49%"> <img src="captures/windows-installateur.jpg" alt="Installateur : mise à jour par-dessus l'ancienne version" width="30%"></p>
+<p><img src="captures/en/windows-nettoyage.png" alt="Cleanup" width="49%"> <img src="captures/en/windows-performances.png" alt="Performance" width="49%"></p>
+<p><img src="captures/en/windows-mes-logiciels.png" alt="My software" width="49%"> <img src="captures/en/windows-installateur.png" alt="Installer: updating over the previous version" width="30%"></p>
 
-### Installer
+### Installing
 
-1. Télécharge `BoiteAOutils-Setup.exe` dans les [Releases](https://github.com/jeremdevgit/boite-a-outils/releases/latest) et lance-le.
-2. **Une version déjà installée est détectée et désinstallée automatiquement** pendant l'installation de la nouvelle ; l'historique, les sauvegardes et les réglages sont gardés.
-3. L'application s'installe dans *Program Files* (dossier que seuls les administrateurs peuvent modifier), avec ses raccourcis et son entrée dans *Paramètres › Applications*.
+1. Download `BoiteAOutils-Setup.exe` from the [Releases](https://github.com/jeremdevgit/boite-a-outils/releases/latest) and run it.
+2. **An already installed version is detected and uninstalled automatically** while the new one installs; history, backups and settings are kept.
+3. The app installs into *Program Files* (a folder that only administrators can modify), with its shortcuts and its entry in *Settings › Apps*.
 
-L'exécutable n'est pas signé par un certificat payant : au premier lancement, Windows SmartScreen peut afficher « Windows a protégé votre ordinateur ». Clique sur **Informations complémentaires** puis **Exécuter quand même**. Pour vérifier le fichier : `Get-FileHash .\BoiteAOutils-Setup.exe` et compare avec `SHA256SUMS-windows.txt`.
+The executable isn't signed with a paid certificate: on first launch, Windows SmartScreen may show "Windows protected your PC". Click **More info** then **Run anyway**. To check the file: `Get-FileHash .\BoiteAOutils-Setup.exe` and compare with `SHA256SUMS-windows.txt`.
 
-Installation silencieuse : `BoiteAOutils-Setup.exe /S`.
+Silent install: `BoiteAOutils-Setup.exe /S`.
 
 ---
 
 ## macOS
 
-Tableau de bord, nettoyage système, confidentialité des navigateurs, espace disque, gros fichiers, doublons, projets de développement, désinstallateur complet, restes orphelins, démarrage, processus, maintenance, mises à jour, réglages cachés, interrupteurs, personnalisation, rangement des fenêtres, presse-papiers, réseau, batterie, câbles USB-C, capteurs, disques, écrans, sécurité, utilitaires… Le détail des modules est dans [`macos/README.md`](macos/README.md).
+Dashboard, system cleanup, browser privacy, disk space, large files, duplicates, development projects, complete uninstaller, orphaned leftovers, startup, processes, maintenance, updates, hidden settings, switches, customization, window tiling, clipboard, network, battery, USB-C cables, sensors, drives, displays, security, utilities… The modules are detailed in [`macos/README.md`](macos/README.md) (in French).
 
-<p><img src="captures/macos-capteurs.png" alt="Capteurs" width="49%"> <img src="captures/macos-interrupteurs-sombre.png" alt="Interrupteurs, en mode sombre" width="49%"></p>
-<p><img src="captures/macos-reglages-caches.png" alt="Réglages cachés" width="49%"> <img src="captures/macos-mes-logiciels.png" alt="Mes logiciels" width="49%"></p>
-<p><img src="captures/macos-autorisations.png" alt="Autorisations" width="49%"> <img src="captures/macos-ports.png" alt="Câbles et ports" width="49%"></p>
+<p><img src="captures/en/macos-capteurs.png" alt="Sensors" width="49%"> <img src="captures/en/macos-interrupteurs-sombre.png" alt="Switches, in dark mode" width="49%"></p>
+<p><img src="captures/en/macos-reglages-caches.png" alt="Hidden settings" width="49%"> <img src="captures/en/macos-mes-logiciels.png" alt="My software" width="49%"></p>
+<p><img src="captures/en/macos-autorisations.png" alt="Permissions" width="49%"> <img src="captures/en/macos-ports.png" alt="Cables and ports" width="49%"></p>
 
-### Installer
+### Installing
 
-- **Paquet `.pkg` (conseillé)** : double-clic, puis suivre l'assistant. **L'ancienne version est fermée et retirée automatiquement** avant l'installation ; tes réglages et ton historique sont conservés.
-- **Image `.dmg`** : glisser « Boîte à outils » sur le dossier Applications (le Finder propose de remplacer l'ancienne version).
+- **`.pkg` package (recommended)**: double-click and follow the assistant. **The previous version is closed and removed automatically** before installing; your settings and history are kept.
+- **`.dmg` image**: drag "Boîte à outils" to the Applications folder (the Finder offers to replace the old version).
 
-L'application n'est pas notarisée par Apple : au premier lancement, fais **clic droit › Ouvrir**, ou *Réglages Système › Confidentialité et sécurité › Ouvrir quand même*. Pour vérifier les fichiers : `shasum -a 256 -c SHA256SUMS-macos.txt --ignore-missing`.
+The app isn't notarized by Apple: on first launch, **right-click › Open**, or *System Settings › Privacy & Security › Open Anyway*. To check the files: `shasum -a 256 -c SHA256SUMS-macos.txt --ignore-missing`.
 
-Conseillé ensuite : *Réglages Système › Confidentialité et sécurité › Accès complet au disque* → ajouter « Boîte à outils » (la page **Autorisations** de l'application guide pas à pas).
-
----
-
-## Vie privée et sécurité
-
-- **Aucune télémétrie, aucun compte, aucune publicité.** Rien n'est envoyé : tout est analysé sur l'ordinateur.
-- **Rien n'est modifié sans confirmation** ; les suppressions passent par la Corbeille quand c'est possible et sont notées dans l'Historique.
-- **Windows** : point de restauration proposé avant la première modification ; installation dans un dossier protégé ; bibliothèques système chargées uniquement depuis System32 (pas de détournement de DLL depuis le dossier Téléchargements) ; pages de l'interface servies depuis l'exécutable, commandes natives acceptées uniquement de l'interface ; liens externes ouverts avec les droits de l'utilisateur, jamais en administrateur.
-- **Services contactés, uniquement à ta demande** : catalogue Microsoft Update (pilotes), live.sysinternals.com (outils Sysinternals), winget (logiciels essentiels), sites des fabricants (liens), VirusTotal (empreinte d'un fichier, dans le navigateur, macOS), api.ipify.org (« Afficher l'IP publique », macOS), test de débit Apple `networkQuality` (macOS).
-
-Une faille ? Merci de lire [SECURITY.md](SECURITY.md) avant d'ouvrir un ticket public.
+Recommended next: *System Settings › Privacy & Security › Full Disk Access* → add "Boîte à outils" (the app's **Permissions** page guides you step by step).
 
 ---
 
-## Compiler
+## Privacy and security
 
-**Windows** — prérequis : [Rust](https://rustup.rs) stable et les *Build Tools* de Visual Studio (composant « Développement Desktop en C++ »).
+- **No telemetry, no account, no ads.** Nothing is sent: everything is analyzed on the computer.
+- **Nothing is changed without confirmation**; deletions go to the Trash / Recycle Bin when possible and are logged in the History.
+- **Windows**: a restore point is offered before the first change; installed in a protected folder; system libraries loaded only from System32 (no DLL hijacking from the Downloads folder); interface pages served from the executable, native commands accepted only from the interface; external links opened with the user's rights, never as administrator.
+- **Services contacted, only when you ask**: Microsoft Update catalog (drivers), live.sysinternals.com (Sysinternals tools), winget (essential software), manufacturers' websites (links), VirusTotal (a file's hash, in the browser, macOS), api.ipify.org ("Show public IP", macOS), Apple's `networkQuality` speed test (macOS).
+
+Found a vulnerability? Please read [SECURITY.md](SECURITY.md) before opening a public issue.
+
+---
+
+## Building
+
+**Windows** — requirements: stable [Rust](https://rustup.rs) and the Visual Studio *Build Tools* ("Desktop development with C++" workload).
 
 ```powershell
 cd windows
 cargo build --release              # target\release\BoiteAOutils.exe
-.\tools\release.ps1                # version distribuée + contrôles (aucun chemin ni identifiant de la machine, aucune dépendance au Runtime Visual C++)
+.\tools\release.ps1                # distributed version + checks (no path or identifier of the machine, no dependency on the Visual C++ Runtime)
 ```
 
-Les versions publiées sont construites par GitHub Actions ([`.github/workflows/windows.yml`](.github/workflows/windows.yml)) avec ce même script.
+Released versions are built by GitHub Actions ([`.github/workflows/windows.yml`](.github/workflows/windows.yml)) with this same script.
 
-**macOS** — prérequis : macOS 14+, Xcode ou les Command Line Tools.
+**macOS** — requirements: macOS 14+, Xcode or the Command Line Tools.
 
 ```sh
 cd macos
-./build.sh                         # build/Boîte à outils.app (universelle Apple Silicon + Intel)
-./make_installer.sh                # dist/*.pkg, dist/*.dmg et SHA256SUMS-macos.txt
-./Tests/run_tests.sh               # tests fonctionnels (ne modifient aucune donnée)
+./build.sh                         # build/Boîte à outils.app (universal Apple Silicon + Intel)
+./make_installer.sh                # dist/*.pkg, dist/*.dmg and SHA256SUMS-macos.txt
+./Tests/run_tests.sh               # functional tests (they don't modify any data)
 ```
 
-## Structure du dépôt
+## Repository layout
 
 ```
-windows/src/        programme Windows (Rust) : fenêtre, installateur, nettoyage, matériel, capteurs…
-windows/ui/         interface (HTML, CSS, JavaScript sans framework)
-windows/ps/         scripts PowerShell appelés par l'interface (lecture et réglages de Windows)
-windows/assets/     modules du pilote PawnIO (lecture des capteurs de la carte mère)
-windows/tools/      construction de la version distribuée
-macos/Sources/      application macOS (SwiftUI)
-macos/Resources/    icône, Info.plist, scripts du paquet d'installation
-captures/           captures d'écran (données de démonstration)
-licences-tiers/     licences des composants tiers
+windows/src/        Windows program (Rust): window, installer, cleanup, hardware, sensors…
+windows/ui/         interface (HTML, CSS, framework-free JavaScript)
+windows/ps/         PowerShell scripts called by the interface (reading and changing Windows settings)
+windows/assets/     PawnIO driver modules (reading motherboard sensors)
+windows/tools/      building the distributed version
+macos/Sources/      macOS app (SwiftUI)
+macos/Resources/    icon, Info.plist, installer package scripts
+captures/           screenshots (demo data)
+licences-tiers/     third-party component licenses
 ```
 
-## Licence
+## License
 
-Code sous licence **GNU GPL v3 ou ultérieure** — voir [LICENSE](LICENSE). Copyright © 2026 jeremdevgit.
+Code under the **GNU GPL v3 or later** — see [LICENSE](LICENSE). Copyright © 2026 jeremdevgit.
 
-Composants tiers (dossier [licences-tiers](licences-tiers/)) :
+Third-party components (folder [licences-tiers](licences-tiers/)):
 
-- modules du pilote [PawnIO](https://github.com/namazso/PawnIO.Modules) (Windows) — licence LGPL-2.1, sources sur github.com/namazso/PawnIO.Modules ;
-- décodage USB Power Delivery et accès au SMC adaptés de WhatCable (macOS) — licence MIT.
+- [PawnIO](https://github.com/namazso/PawnIO.Modules) driver modules (Windows) — LGPL-2.1 license, sources at github.com/namazso/PawnIO.Modules;
+- USB Power Delivery decoding and SMC access adapted from WhatCable (macOS) — MIT license.
 
-## Mes autres logiciels
+## My other software
 
-Tous libres, gratuits et sans publicité — [github.com/jeremdevgit](https://github.com/jeremdevgit) :
+All free, open source and ad-free — [github.com/jeremdevgit](https://github.com/jeremdevgit):
 
-| Logiciel | Pour | En bref |
+| Software | For | In short |
 |---|---|---|
-| [Pomme](https://github.com/jeremdevgit/pomme) | Windows | lecteur Apple Music et musique locale |
-| [rJb](https://github.com/jeremdevgit/rjb) | Windows | l'éclairage RGB de tous tes appareils dans une seule application |
-| [Ludothèque](https://github.com/jeremdevgit/ludotheque) | macOS | tous tes jeux dans un seul lanceur |
-| [Suite Libre](https://jeremdevgit.github.io/suite-libre/) | navigateur | six outils sans compte : QR codes, flou, photos, conversions, moyennes, mots de passe |
-| [Batailles de France](https://github.com/jeremdevgit/batailles-de-france) | navigateur | jeu de stratégie en temps réel sur les cartes de cinq villes |
-
----
-
-## English summary
-
-**Boîte à outils** ("toolbox") is a pair of native maintenance apps for **Windows 10/11** (Rust + WebView2) and **macOS 14+** (SwiftUI): startup items, services, cleanup, large and duplicate files, leftovers, hardware info and sensors, stress tests, documented and reversible tweaks, repair tools, and a full undo history. Nothing is changed without confirmation, no telemetry. The Windows installer (`BoiteAOutils-Setup.exe`) and the macOS `.pkg` automatically remove any previously installed version. The interface is in French. Licensed under GPL-3.0-or-later.
+| [Pomme](https://github.com/jeremdevgit/pomme) | Windows | Apple Music and local music player |
+| [rJb](https://github.com/jeremdevgit/rjb) | Windows | RGB lighting for all your devices in one app |
+| [Ludothèque](https://github.com/jeremdevgit/ludotheque) | macOS | all your games in one launcher |
+| [Suite Libre](https://jeremdevgit.github.io/suite-libre/) | browser | six tools, no account: QR codes, blur, photos, conversions, averages, passwords |
+| [Batailles de France](https://github.com/jeremdevgit/batailles-de-france) | browser | real-time strategy game on the maps of five French cities |

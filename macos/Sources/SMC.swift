@@ -131,16 +131,16 @@ enum Sensors {
 
     static func group(_ key: String) -> String {
         let p2 = String(key.prefix(2)), p3 = String(key.prefix(3))
-        if key.hasPrefix("TB") { return "Batterie" }
-        if p2 == "Tp" || p2 == "TC" { return "Processeur (cœurs performance)" }
-        if p2 == "Te" { return "Processeur (cœurs efficacité)" }
-        if p2 == "Tg" || p2 == "TG" { return "Carte graphique (GPU)" }
-        if p2 == "Tm" || p2 == "TM" { return "Mémoire" }
-        if p2 == "TH" || p3 == "TS0" || p2 == "TN" { return "Stockage (SSD)" }
+        if key.hasPrefix("TB") { return String(localized: "Batterie") }
+        if p2 == "Tp" || p2 == "TC" { return String(localized: "Processeur (cœurs performance)") }
+        if p2 == "Te" { return String(localized: "Processeur (cœurs efficacité)") }
+        if p2 == "Tg" || p2 == "TG" { return String(localized: "Carte graphique (GPU)") }
+        if p2 == "Tm" || p2 == "TM" { return String(localized: "Mémoire") }
+        if p2 == "TH" || p3 == "TS0" || p2 == "TN" { return String(localized: "Stockage (SSD)") }
         if p2 == "TW" { return "Wi-Fi / Bluetooth" }
-        if p2 == "Ta" || p2 == "TA" { return "Air / ambiant" }
-        if p2 == "Ts" || p2 == "TP" { return "Boîtier et alimentation" }
-        return "Autres capteurs"
+        if p2 == "Ta" || p2 == "TA" { return String(localized: "Air / ambiant") }
+        if p2 == "Ts" || p2 == "TP" { return String(localized: "Boîtier et alimentation") }
+        return String(localized: "Autres capteurs")
     }
 
     static func readAll() -> [SensorReading] {

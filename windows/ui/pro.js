@@ -265,7 +265,7 @@ views.drivers = async (v, live) => {
       const cur = byHw.get(u.hwid.toLowerCase());
       const older = cur && u.date && cur.date && new Date(u.date) < new Date(cur.date);
       return `<label class="pick"><input type="checkbox" data-wu="${esc(u.id)}"${older ? '' : ' checked'}><div><div>${esc(u.title)}</div><div class="muted small">${esc(u.class)} · ${esc(u.maker)} · ${fmtDate(u.date)}${cur ? ` · installé : ${esc(cur.version)} du ${fmtDate(cur.date)}` : ''}</div></div><div class="nowrap">${older ? '<span class="badge warn">Plus ancien que l\'installé</span> ' : ''}<span class="size">${fmtSize(u.size)}</span></div></label>`;
-    }).join('')}</div><div class="row end" style="margin-top:10px"><button class="btn primary" id="wu-install">Installer la sélection</button></div>` : '<div class="note ok" style="margin:0">Windows Update ne propose aucun pilote pour ce PC. Les sites des fabricants peuvent en avoir de plus récents.</div>';
+    }).join('')}</div><div class="row end" style="margin-top:10px">${checkAll('input[data-wu]', '#wu')}<button class="btn primary" id="wu-install">Installer la sélection</button></div>` : '<div class="note ok" style="margin:0">Windows Update ne propose aucun pilote pour ce PC. Les sites des fabricants peuvent en avoir de plus récents.</div>';
   };
   // catalogue Microsoft Update : recherche et installation sans quitter l'application
   const catalogFor = async (d, btn) => {
@@ -397,7 +397,7 @@ views.backup = async (v, live) => {
       <div class="note info"><b>Un seul installateur pour tout :</b> la sauvegarde contiendra <b>Tout-reinstaller.cmd</b>, qui réinstalle d'un double-clic la dernière version de chaque logiciel reconnu, et <b>Ouvrir-les-sites.cmd</b>, qui ouvre la page des autres.</div>
       <div class="row" style="margin:6px 0 12px"><label class="row small muted"><input type="checkbox" id="sys"${st.showSys ? ' checked' : ''}> Afficher les composants système</label><span class="grow"></span><button class="btn" id="next">Continuer</button></div>
       <h2>Réinstallables automatiquement</h2><p class="muted small">Cochez ceux dont vous voulez aussi le fichier d'installation dans la sauvegarde (utile sans connexion). Les applications du Microsoft Store ne se téléchargent pas ainsi.</p>
-      <div class="row" style="margin-bottom:8px"><button class="btn small" id="all">Tout cocher</button><button class="btn small" id="none">Tout décocher</button></div>
+      <div class="row" style="margin-bottom:8px"><button class="btn small" id="all">Tout sélectionner</button><button class="btn small" id="none">Tout désélectionner</button></div>
       <div class="card glass scroll-x"><table class="table"><tbody>${auto.map(p => `<tr><td style="width:28px">${p.kind === 'winget' ? `<input type="checkbox" data-dl="${esc(p.id)}"${st.dl.has(p.id) ? ' checked' : ''}>` : ''}</td><td>${esc(p.name)}</td><td class="muted mono">${esc(p.version)}</td><td>${p.available ? `<span class="badge info">Version ${esc(p.available)} disponible</span>` : ''}</td><td class="muted small">${p.kind === 'store' ? 'Microsoft Store' : esc(p.id)}</td></tr>`).join('')}</tbody></table></div>
       <h2>À réinstaller depuis leur site</h2><div class="card glass scroll-x"><table class="table"><tbody>${manual.map(p => `<tr><td>${esc(p.name)}</td><td class="muted mono">${esc(p.version)}</td><td class="r"><button class="btn small" data-site="${esc(p.url && /^https?:/.test(p.url) ? p.url : `https://duckduckgo.com/?q=${encodeURIComponent(p.name + ' télécharger site officiel')}`)}">${p.url && /^https?:/.test(p.url) ? 'Site de l\'éditeur' : 'Rechercher'}</button></td></tr>`).join('')}</tbody></table></div>
       <h2>Jeux</h2><p class="muted small">Ils ne sont pas copiés : à retélécharger depuis leur plateforme. Leurs sauvegardes et réglages sont proposés à l'étape suivante.</p>
@@ -422,6 +422,7 @@ views.backup = async (v, live) => {
     const groups = [...new Set(items.map(i => i.group))];
     const total = items.filter(i => st.picked.has(i.path)).reduce((s, i) => s + (st.sizes[i.path] || 0), 0);
     body().innerHTML = `<div class="note warn"><b>Que voulez-vous garder ?</b> Vérifiez cette liste avant de continuer : ce qui n'est pas coché ne sera pas sauvegardé. Fermez aussi vos jeux, navigateurs et Discord : un fichier ouvert ne peut pas être copié.</div>
+      <div class="row" style="margin:10px 0 0"><button class="btn small" id="pick-all">Tout sélectionner</button><button class="btn small" id="pick-none">Tout désélectionner</button></div>
       ${groups.map(g => `<h2>${esc(g)}</h2><div class="card glass" style="padding:6px">${items.filter(i => i.group === g).map(i => `<label class="pick"><input type="checkbox" data-p="${esc(i.path)}"${st.picked.has(i.path) ? ' checked' : ''}><div class="grow"><div><b>${esc(i.label)}</b></div><div class="muted small">${esc(i.why)}${i.note ? ` · <span style="color:var(--warn)">${esc(i.note)}</span>` : ''}</div><div class="muted small mono ellipsis">${esc(i.path)}</div></div><span class="size">${st.sizes[i.path] == null ? '…' : fmtSize(st.sizes[i.path])}</span></label>`).join('')}</div>`).join('')}
       <div class="card glass"><h3>Options</h3>
         <label class="pick"><input type="checkbox" id="o-caches"${st.skipCaches ? ' checked' : ''}><div>Ignorer les caches (navigateurs, shaders, node_modules, temporaires)<div class="muted small">Recréés par les logiciels. Fortement conseillé : la taille affichée au-dessus les inclut encore.</div></div><span></span></label>
@@ -485,6 +486,8 @@ views.backup = async (v, live) => {
     if (e.target.closest('#start')) { const ok = await bao.call('backup.free', { path: st.dest }); if (!ok.free) return toast('Dossier de destination introuvable'); return start(); }
     const of = e.target.closest('#open-folder');
     if (of) bao.call('files.reveal', { path: of.dataset.f });
+    const pk = e.target.closest('#pick-all, #pick-none');
+    if (pk) { for (const i of [...[].concat(st.scan.items), ...st.custom]) pk.id === 'pick-all' ? st.picked.add(i.path) : st.picked.delete(i.path); drawData(); }
   });
   v.addEventListener('change', e => {
     const t = e.target;

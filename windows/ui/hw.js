@@ -4,12 +4,12 @@
    stabilité (façon OCCT), Mode Dieu et autres logiciels. Utilise les outils
    d'app.js (bao, ps, esc, router, views…). */
 
-const UNIT = { temp: '°C', freq: 'MHz', load: '%', power: 'W', fan: 'tr/min', volt: 'V', data: 'Go', pct: '%' };
+const UNIT = { temp: '°C', freq: 'MHz', load: '%', power: 'W', fan: trad('tr/min'), volt: 'V', data: UNITS.g, pct: '%' };
 const KIND_NAME = { temp: 'Températures', volt: 'Tensions', power: 'Puissance', freq: 'Fréquences', load: 'Charge', fan: 'Ventilateurs', pct: 'Ventilateurs et puissance', data: 'Mémoire' };
 const fmtVal = (k, v) => {
   if (v == null || !isFinite(v)) return '—';
   const d = k === 'volt' ? 3 : k === 'temp' || k === 'power' || k === 'data' ? 1 : 0;
-  return v.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }) + ' ' + UNIT[k];
+  return v.toLocaleString(LOCALE, { minimumFractionDigits: d, maximumFractionDigits: d }) + ' ' + UNIT[k];
 };
 const tempClass = (k, v) => k !== 'temp' ? '' : v >= 90 ? ' bad' : v >= 80 ? ' warn' : '';
 const PAWNIO_NOTE = `<div class="note info">Pour la température et la puissance du processeur et les sondes de la carte mère (ventilateurs, tensions), la Boîte à outils utilise <b>PawnIO</b> : un pilote libre et signé, utilisé aussi par LibreHardwareMonitor et FanControl, en lecture seule ici. <button class="btn small" data-act="pawnio">Installer PawnIO</button></div>`;
@@ -29,7 +29,7 @@ views.hardware = async (v, live) => {
   let tab = 0;
   const row = (k, val) => val === '' || val == null ? '' : `<tr><td class="muted" style="width:38%">${esc(k)}</td><td>${val}</td></tr>`;
   const table = rows => `<div class="card glass"><table class="table"><tbody>${rows.join('')}</tbody></table></div>`;
-  const sizeK = b => b >= 1 << 20 ? (b / (1 << 20)) + ' Mo' : (b / 1024) + ' Ko';
+  const sizeK = b => b >= 1 << 20 ? (b / (1 << 20)) + ' ' + UNITS.m : (b / 1024) + ' ' + UNITS.k;
   const freq = () => sens?.groups?.find(g => g.id === 'cpu')?.items.find(i => i.l === 'Fréquence maximale des cœurs')?.v;
   const sections = [
     () => table([
@@ -81,8 +81,8 @@ views.hardware = async (v, live) => {
     const t = e.target.closest('[data-t]');
     if (t) { tab = +t.dataset.t; $$('[data-t]', v).forEach(c => c.classList.toggle('on', c === t)); render(); }
     if (e.target.closest('#hw-copy')) {
-      const text = sections.map(f => { const d = document.createElement('div'); d.innerHTML = f(); return d.innerText; }).join('\n\n');
-      navigator.clipboard.writeText(`Rapport matériel — Boîte à outils\n\n${text}`).then(() => toast('Rapport copié'), () => toast('Copie impossible'));
+      const text = sections.map(f => { const d = document.createElement('div'); d.innerHTML = f(); traduirePage(d); return d.innerText; }).join('\n\n');
+      navigator.clipboard.writeText(`${trad('Rapport matériel — Boîte à outils')}\n\n${text}`).then(() => toast('Rapport copié'), () => toast('Copie impossible'));
     }
   });
 };
@@ -212,7 +212,7 @@ views.stress = async (v, live) => {
       out.innerHTML = '<div class="progress"><div class="spinner"></div><div data-line>Préparation…</div></div>';
       try {
         const r = await bao.call('bench.disk', { drive, sizeMb: size }, d => { const l = $('[data-line]', out); if (l) l.textContent = d.line; });
-        const mb = x => nf0.format(x) + ' Mo/s';
+        const mb = x => nf0.format(x) + ' ' + UNITS.m + '/s';
         out.innerHTML = `<table class="table" style="margin-top:10px"><thead><tr><th></th><th class="r">Lecture</th><th class="r">Écriture</th></tr></thead><tbody><tr><td>Séquentiel (1 Mo)</td><td class="r val">${mb(r.seqRead)}</td><td class="r val">${mb(r.seqWrite)}</td></tr><tr><td>Aléatoire 4 Ko</td><td class="r val">${nf1.format(r.rndRead)} Mo/s<div class="muted small">${nf0.format(r.rndReadIops)} IOPS</div></td><td class="r val">${nf1.format(r.rndWrite)} Mo/s<div class="muted small">${nf0.format(r.rndWriteIops)} IOPS</div></td></tr></tbody></table><div class="muted small">Ordres de grandeur en lecture séquentielle : disque dur 100 à 250 Mo/s, SSD SATA 500 Mo/s, SSD NVMe 2 000 à 14 000 Mo/s.</div>`;
         journalNote(`Vitesse du disque ${drive}: : ${mb(r.seqRead)} en lecture, ${mb(r.seqWrite)} en écriture`);
       } catch (err) { out.innerHTML = `<div class="note warn">${esc(err.message)}</div>`; }

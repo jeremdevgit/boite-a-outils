@@ -92,7 +92,7 @@ struct ClipboardView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Presse-papiers", subtitle: "Retrouvez tout ce que vous avez copié",
+            PageHeader(title: String(localized: "Presse-papiers"), subtitle: String(localized: "Retrouvez tout ce que vous avez copié"),
                        icon: "doc.on.clipboard.fill", color: .teal) {
                 Toggle("Enregistrer l'historique", isOn: $history.enabled).toggleStyle(.switch)
             }
@@ -103,8 +103,8 @@ struct ClipboardView: View {
             .padding(.horizontal, 24).padding(.bottom, 10)
 
             if filtered.isEmpty {
-                EmptyState(icon: "doc.on.clipboard", title: history.items.isEmpty ? "Historique vide" : "Aucun résultat",
-                           message: "Copiez du texte n'importe où (⌘C) : il apparaîtra ici. Les mots de passe copiés depuis un gestionnaire sont ignorés.")
+                EmptyState(icon: "doc.on.clipboard", title: history.items.isEmpty ? String(localized: "Historique vide") : String(localized: "Aucun résultat"),
+                           message: String(localized: "Copiez du texte n'importe où (⌘C) : il apparaîtra ici. Les mots de passe copiés depuis un gestionnaire sont ignorés."))
             } else {
                 List(filtered) { item in
                     HStack(alignment: .top, spacing: 10) {

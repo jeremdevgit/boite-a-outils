@@ -26,9 +26,9 @@ struct PDIdentity {
         case 0: return "USB 2.0 (480 Mb/s)"
         case 1: return "USB 3.2 Gen 1 (5 Gb/s)"
         case 2: return "USB 3.2 Gen 2 (10 Gb/s)"
-        case 3: return "USB4 Gen 3 (40 Gb/s, classe Thunderbolt 4)"
-        case 4: return "USB4 Gen 4 (80 Gb/s, classe Thunderbolt 5)"
-        default: return "Inconnue"
+        case 3: return String(localized: "USB4 Gen 3 (40 Gb/s, classe Thunderbolt 4)")
+        case 4: return String(localized: "USB4 Gen 4 (80 Gb/s, classe Thunderbolt 5)")
+        default: return String(localized: "Inconnue")
         }
     }
     var isUSB2Only: Bool { cableVDO.map { $0 & 0b111 == 0 } ?? false }
@@ -48,7 +48,7 @@ struct PDIdentity {
         return Int(a * Double(epr ? min(v, 48) : 20))
     }
 
-    var vendorName: String { PDIdentity.vendors[vendorID] ?? String(format: "Fabricant 0x%04X", vendorID) }
+    var vendorName: String { PDIdentity.vendors[vendorID] ?? String(format: String(localized: "Fabricant 0x%04X"), vendorID) }
 
     static let vendors: [Int: String] = [
         0x05AC: "Apple", 0x291A: "Anker", 0x050D: "Belkin", 0x2B89: "UGREEN", 0x04E8: "Samsung", 0x18D1: "Google",
@@ -142,7 +142,7 @@ final class PortsModel: ObservableObject {
                 guard let n = IORegistry.int(p["PortNumber"]), !ports.contains(where: { $0.number == n }) else { continue }
                 ports.append(USBCPort(
                     number: n,
-                    name: (p["PortDescription"] as? String) ?? "Port USB-C \(n)",
+                    name: (p["PortDescription"] as? String) ?? String(localized: "Port USB-C \(n)"),
                     connected: (p["ConnectionActive"] as? Bool) ?? false,
                     transportsActive: p["TransportsActive"] as? [String] ?? [],
                     transportsSupported: p["TransportsSupported"] as? [String] ?? [],
@@ -190,7 +190,7 @@ final class PortsModel: ObservableObject {
     }
 
     static func readUSB() -> [USBDeviceInfo] {
-        let speeds = ["Basse vitesse (1,5 Mb/s)", "Pleine vitesse (12 Mb/s)", "USB 2.0 (480 Mb/s)",
+        let speeds = [String(localized: "Basse vitesse (1,5 Mb/s)"), String(localized: "Pleine vitesse (12 Mb/s)"), "USB 2.0 (480 Mb/s)",
                       "USB 3 (5 Gb/s)", "USB 3 (10 Gb/s)", "USB 3 (20 Gb/s)"]
         return IORegistry.all(ofClass: "IOUSBHostDevice").compactMap { d in
             guard let name = d["USB Product Name"] as? String ?? d["kUSBProductString"] as? String else { return nil }
@@ -228,24 +228,24 @@ final class PortsModel: ObservableObject {
         if let c = p.cable {
             if let w = c.maxWatts, let charger = p.chargerMax, charger > Double(w) + 1 {
                 out.append(("exclamationmark.triangle.fill", .orange,
-                            "Le câble est le maillon faible : il supporte \(w) W alors que le chargeur peut fournir \(Int(charger)) W."))
+                            String(localized: "Le câble est le maillon faible : il supporte \(w) W alors que le chargeur peut fournir \(Int(charger)) W.")))
             }
             if c.isUSB2Only && p.transportsActive.contains("USB3") == false && !usb.isEmpty {
-                out.append(("tortoise.fill", .orange, "Ce câble ne transporte que l'USB 2.0 (480 Mb/s) : les disques et docks seront lents."))
+                out.append(("tortoise.fill", .orange, String(localized: "Ce câble ne transporte que l'USB 2.0 (480 Mb/s) : les disques et docks seront lents.")))
             }
             if c.xid == 0 {
-                out.append(("questionmark.circle.fill", .secondary, "Câble non certifié USB-IF. Ce n'est pas forcément un mauvais câble, mais méfiance s'il chauffe."))
+                out.append(("questionmark.circle.fill", .secondary, String(localized: "Câble non certifié USB-IF. Ce n'est pas forcément un mauvais câble, mais méfiance s'il chauffe.")))
             }
         } else if !p.powerOptions.isEmpty || !p.transportsActive.isEmpty {
-            out.append(("info.circle.fill", .secondary, "Câble sans puce e-marker : limité à 60 W (3 A) et généralement à l'USB 2.0 ou 3.x."))
+            out.append(("info.circle.fill", .secondary, String(localized: "Câble sans puce e-marker : limité à 60 W (3 A) et généralement à l'USB 2.0 ou 3.x.")))
         }
         if let n = p.negotiated, let max = p.chargerMax, n.watts + 1 < max {
-            out.append(("bolt.fill", .secondary, String(format: "Le Mac a retenu %.0f W sur les %.0f W proposés (normal si la batterie est presque pleine).", n.watts, max)))
+            out.append(("bolt.fill", .secondary, String(format: String(localized: "Le Mac a retenu %.0f W sur les %.0f W proposés (normal si la batterie est presque pleine)."), n.watts, max)))
         }
         if let o = p.overcurrent, o > 0 {
-            out.append(("bolt.trianglebadge.exclamationmark.fill", .red, "\(o) surintensité(s) détectée(s) sur ce port depuis le démarrage."))
+            out.append(("bolt.trianglebadge.exclamationmark.fill", .red, String(localized: "\(o) surintensité(s) détectée(s) sur ce port depuis le démarrage.")))
         }
-        if out.isEmpty { out.append(("checkmark.circle.fill", .green, "Aucune limitation détectée.")) }
+        if out.isEmpty { out.append(("checkmark.circle.fill", .green, String(localized: "Aucune limitation détectée."))) }
         return out
     }
 }
@@ -256,16 +256,16 @@ struct PortsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageHeader(title: "Câbles & ports", subtitle: "Ce que vos câbles USB-C, chargeurs et accessoires savent vraiment faire",
+                PageHeader(title: String(localized: "Câbles & ports"), subtitle: String(localized: "Ce que vos câbles USB-C, chargeurs et accessoires savent vraiment faire"),
                            icon: "cable.connector", color: .orange)
                 Group {
                     if let w = model.power.inWatts {
                         Card {
                             HStack(spacing: 24) {
-                                metric(String(format: "%.1f W", w), "Puissance reçue")
-                                if let v = model.power.inVolts { metric(String(format: "%.2f V", v), "Tension") }
-                                if let a = model.power.inAmps { metric(String(format: "%.2f A", a), "Courant") }
-                                if let s = model.power.systemWatts { metric(String(format: "%.1f W", s), "Consommation du Mac") }
+                                metric(String(format: "%.1f W", w), String(localized: "Puissance reçue"))
+                                if let v = model.power.inVolts { metric(String(format: "%.2f V", v), String(localized: "Tension")) }
+                                if let a = model.power.inAmps { metric(String(format: "%.2f A", a), String(localized: "Courant")) }
+                                if let s = model.power.systemWatts { metric(String(format: "%.1f W", s), String(localized: "Consommation du Mac")) }
                                 Spacer()
                                 Text("Mesure en direct (2 s)").font(.caption).foregroundStyle(.secondary)
                             }
@@ -275,7 +275,7 @@ struct PortsView: View {
                     if model.loaded && model.ports.isEmpty {
                         Card { Text("Aucun port USB-C lisible sur ce Mac (les Mac Intel exposent moins d'informations).").foregroundStyle(.secondary) }
                     }
-                    Card(title: "Appareils USB branchés", icon: "externaldrive.connected.to.line.below") {
+                    Card(title: String(localized: "Appareils USB branchés"), icon: "externaldrive.connected.to.line.below") {
                         if model.usb.isEmpty { Text("Aucun appareil USB externe.").foregroundStyle(.secondary) }
                         ForEach(model.usb) { d in
                             HStack {
@@ -309,8 +309,8 @@ struct PortsView: View {
                     .foregroundStyle(p.connected ? .orange : .secondary)
                 VStack(alignment: .leading) {
                     Text(p.name.replacingOccurrences(of: "Port-USB-C@", with: "Port USB-C ")).font(.headline)
-                    Text(p.connected ? "Branché · " + (p.transportsActive.isEmpty ? "alimentation seule" : p.transportsActive.map(transportName).joined(separator: ", "))
-                                     : "Rien de branché")
+                    Text(p.connected ? String(localized: "Branché · ") + (p.transportsActive.isEmpty ? String(localized: "alimentation seule") : p.transportsActive.map(transportName).joined(separator: ", "))
+                                     : String(localized: "Rien de branché"))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -320,14 +320,14 @@ struct PortsView: View {
                 if let c = p.cable {
                     Divider()
                     Text("Câble").font(.subheadline.bold())
-                    grid([("Fabricant", c.vendorName), ("Type", c.isActiveCable || p.activeCable ? (p.opticalCable ? "Actif optique" : "Actif") : "Passif"),
-                          ("Données", c.speed ?? "—"), ("Puissance max", c.maxWatts.map { "\($0) W (\(Int(c.maxAmps ?? 3)) A\(c.epr ? ", EPR" : ""))" } ?? "—"),
-                          ("Certification USB-IF", c.xid.map { $0 == 0 ? "Non certifié" : String(format: "XID %u", $0) } ?? "—")])
+                    grid([(String(localized: "Fabricant"), c.vendorName), ("Type", c.isActiveCable || p.activeCable ? (p.opticalCable ? String(localized: "Actif optique") : String(localized: "Actif")) : String(localized: "Passif")),
+                          (String(localized: "Données"), c.speed ?? "—"), (String(localized: "Puissance max"), c.maxWatts.map { "\($0) W (\(Int(c.maxAmps ?? 3)) A\(c.epr ? ", EPR" : ""))" } ?? "—"),
+                          ("Certification USB-IF", c.xid.map { $0 == 0 ? String(localized: "Non certifié") : String(format: "XID %u", $0) } ?? "—")])
                 }
                 if let partner = p.partner {
                     Divider()
                     Text("Appareil connecté").font(.subheadline.bold())
-                    grid([("Fabricant", partner.vendorName), ("Produit", String(format: "0x%04X", partner.productID))])
+                    grid([(String(localized: "Fabricant"), partner.vendorName), (String(localized: "Produit"), String(format: "0x%04X", partner.productID))])
                 }
                 if !p.powerOptions.isEmpty {
                     Divider()
@@ -355,7 +355,7 @@ struct PortsView: View {
         case "USB2": "USB 2"
         case "USB3": "USB 3"
         case "CIO": "Thunderbolt/USB4"
-        case "DisplayPort": "Écran (DisplayPort)"
+        case "DisplayPort": String(localized: "Écran (DisplayPort)")
         default: t
         }
     }

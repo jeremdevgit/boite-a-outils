@@ -52,12 +52,12 @@ final class PrivacyModel: ObservableObject {
 
             // Safari
             let safariData = L.appendingPathComponent("Containers/com.apple.Safari/Data/Library")
-            add("Safari", "Cache", "Pages et images mises en cache.",
+            add("Safari", "Cache", String(localized: "Pages et images mises en cache."),
                 [L.appendingPathComponent("Caches/com.apple.Safari"), safariData.appendingPathComponent("Caches")], ["com.apple.Safari"], true)
-            add("Safari", "Historique de navigation", "Sites visités et dernière session.",
+            add("Safari", String(localized: "Historique de navigation"), String(localized: "Sites visités et dernière session."),
                 ["History.db", "History.db-wal", "History.db-shm", "LastSession.plist"].map { L.appendingPathComponent("Safari/\($0)") },
                 ["com.apple.Safari"], false)
-            add("Safari", "Cookies", "Vous serez déconnecté des sites web.",
+            add("Safari", "Cookies", String(localized: "Vous serez déconnecté des sites web."),
                 [L.appendingPathComponent("Cookies/Cookies.binarycookies"), safariData.appendingPathComponent("Cookies/Cookies.binarycookies")],
                 ["com.apple.Safari"], false)
 
@@ -67,13 +67,13 @@ final class PrivacyModel: ObservableObject {
                 let profiles = FS.children(base).filter { $0.lastPathComponent == "Default" || $0.lastPathComponent.hasPrefix("Profile ") }
                 guard !profiles.isEmpty else { continue }
                 func files(_ names: [String]) -> [URL] { profiles.flatMap { p in names.map { p.appendingPathComponent($0) } } }
-                add(b.name, "Cache", "Pages, scripts et images mis en cache.",
+                add(b.name, "Cache", String(localized: "Pages, scripts et images mis en cache."),
                     files(["Cache", "Code Cache", "GPUCache", "Service Worker/CacheStorage"]) + [L.appendingPathComponent("Caches/\(b.cache)")],
                     [b.id], true)
-                add(b.name, "Historique de navigation", "Sites visités, sites fréquents, raccourcis.",
+                add(b.name, String(localized: "Historique de navigation"), String(localized: "Sites visités, sites fréquents, raccourcis."),
                     files(["History", "History-journal", "Visited Links", "Top Sites", "Top Sites-journal", "Shortcuts", "Shortcuts-journal"]),
                     [b.id], false)
-                add(b.name, "Cookies", "Vous serez déconnecté des sites web.",
+                add(b.name, "Cookies", String(localized: "Vous serez déconnecté des sites web."),
                     files(["Cookies", "Cookies-journal", "Network/Cookies", "Network/Cookies-journal"]), [b.id], false)
             }
 
@@ -81,21 +81,21 @@ final class PrivacyModel: ObservableObject {
             let ffProfiles = FS.children(L.appendingPathComponent("Application Support/Firefox/Profiles")).filter { FS.isDirectory($0) }
             if !ffProfiles.isEmpty {
                 func ff(_ names: [String]) -> [URL] { ffProfiles.flatMap { p in names.map { p.appendingPathComponent($0) } } }
-                add("Firefox", "Cache", "Pages et images mises en cache.", [L.appendingPathComponent("Caches/Firefox")], ["org.mozilla.firefox"], true)
-                add("Firefox", "Cookies", "Vous serez déconnecté des sites web.",
+                add("Firefox", "Cache", String(localized: "Pages et images mises en cache."), [L.appendingPathComponent("Caches/Firefox")], ["org.mozilla.firefox"], true)
+                add("Firefox", "Cookies", String(localized: "Vous serez déconnecté des sites web."),
                     ff(["cookies.sqlite", "cookies.sqlite-wal", "cookies.sqlite-shm"]), ["org.mozilla.firefox"], false)
-                add("Firefox", "Saisies de formulaires", "Texte mémorisé dans les champs de formulaire.",
+                add("Firefox", String(localized: "Saisies de formulaires"), String(localized: "Texte mémorisé dans les champs de formulaire."),
                     ff(["formhistory.sqlite"]), ["org.mozilla.firefox"], false)
             }
 
             // Système
             let sfl = L.appendingPathComponent("Application Support/com.apple.sharedfilelist")
-            add("Activité sur le Mac", "Documents et applications récents", "Listes « Éléments récents » du menu Pomme et des apps.",
+            add(String(localized: "Activité sur le Mac"), String(localized: "Documents et applications récents"), String(localized: "Listes « Éléments récents » du menu Pomme et des apps."),
                 FS.children(sfl).filter { $0.lastPathComponent.contains("Recent") }, [], false)
-            add("Activité sur le Mac", "Historique du Terminal", "Commandes tapées dans zsh, bash, Python et Node.",
+            add(String(localized: "Activité sur le Mac"), String(localized: "Historique du Terminal"), String(localized: "Commandes tapées dans zsh, bash, Python et Node."),
                 [".zsh_history", ".bash_history", ".zsh_sessions", ".python_history", ".node_repl_history", ".lesshst"]
                     .map { FS.home.appendingPathComponent($0) }, ["com.apple.Terminal"], false)
-            add("Activité sur le Mac", "Miniatures Coup d'œil", "Aperçus des fichiers déjà consultés.",
+            add(String(localized: "Activité sur le Mac"), String(localized: "Miniatures Coup d'œil"), String(localized: "Aperçus des fichiers déjà consultés."),
                 [URL(fileURLWithPath: NSTemporaryDirectory()).deletingLastPathComponent().appendingPathComponent("C/com.apple.QuickLook.thumbnailcache")],
                 [], false)
 
@@ -121,11 +121,11 @@ final class PrivacyModel: ObservableObject {
                 for p in item.paths { try? FS.remove(p, permanently: true) }
                 freed += item.size
             }
-            if work.contains(where: { $0.label.contains("récents") }) { Shell.exec("/usr/bin/killall", ["sharedfilelistd"]) }
-            if work.contains(where: { $0.label.contains("Coup d'œil") }) { Shell.exec("/usr/bin/qlmanage", ["-r", "cache"]) }
+            if work.contains(where: { $0.label == String(localized: "Documents et applications récents") }) { Shell.exec("/usr/bin/killall", ["sharedfilelistd"]) }
+            if work.contains(where: { $0.label == String(localized: "Miniatures Coup d'œil") }) { Shell.exec("/usr/bin/qlmanage", ["-r", "cache"]) }
             DispatchQueue.main.async {
                 self.cleaning = false
-                self.message = "Traces effacées (\(formatBytes(freed)))."
+                self.message = String(localized: "Traces effacées (\(formatBytes(freed))).")
                 self.scan()
             }
         }
@@ -138,7 +138,7 @@ struct PrivacyView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Confidentialité", subtitle: "Effacez l'historique, les cookies et les traces d'activité",
+            PageHeader(title: String(localized: "Confidentialité"), subtitle: String(localized: "Effacez l'historique, les cookies et les traces d'activité"),
                        icon: "hand.raised.fill", color: .blue) {
                 if model.scannedOnce && !model.scanning {
                     Button { model.scan() } label: { Label("Réanalyser", systemImage: "arrow.clockwise") }
@@ -153,11 +153,11 @@ struct PrivacyView: View {
             if model.scanning || model.cleaning {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !model.scannedOnce {
-                EmptyState(icon: "hand.raised", title: "Protéger votre vie privée",
-                           message: "Safari, Chrome, Brave, Edge, Arc, Firefox… ainsi que les documents récents et l'historique du Terminal.",
-                           actionTitle: "Analyser") { model.scan() }
+                EmptyState(icon: "hand.raised", title: String(localized: "Protéger votre vie privée"),
+                           message: String(localized: "Safari, Chrome, Brave, Edge, Arc, Firefox… ainsi que les documents récents et l'historique du Terminal."),
+                           actionTitle: String(localized: "Analyser")) { model.scan() }
             } else if model.items.isEmpty {
-                EmptyState(icon: "checkmark.seal", title: "Aucune trace trouvée", message: "Rien à effacer.")
+                EmptyState(icon: "checkmark.seal", title: String(localized: "Aucune trace trouvée"), message: String(localized: "Rien à effacer."))
             } else {
                 List {
                     ForEach(model.groups, id: \.self) { g in
@@ -183,7 +183,7 @@ struct PrivacyView: View {
                 BottomBar {
                     let running = model.runningApps.compactMap(\.localizedName)
                     if !running.isEmpty {
-                        Label("À fermer : " + running.joined(separator: ", "), systemImage: "exclamationmark.triangle.fill")
+                        Label(String(localized: "À fermer : ") + running.joined(separator: ", "), systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
                     }
                     Spacer()

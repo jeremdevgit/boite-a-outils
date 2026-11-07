@@ -61,6 +61,8 @@ a { color: inherit; text-decoration: none; cursor: pointer; }
 #nav a.on { background: rgba(47, 184, 232, .15); color: #fff; box-shadow: inset 0 0 0 1px rgba(47, 184, 232, .32); }
 #nav a.on svg { color: var(--accent); }
 #scrim { display: none; }
+.side-lang { padding: 8px 8px 0; }
+.side-lang .langue { width: 100%; height: 30px; font-size: 12.5px; }
 .side-foot { padding: 10px 8px 2px; border-top: 1px solid var(--line); font-size: 12px; color: var(--dim); }
 .side-foot .btn { width: 100%; margin-top: 6px; }
 
@@ -76,6 +78,7 @@ h3 { font-size: 14px; margin: 0 0 6px; }
 .small { font-size: 12px; }
 .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .row.end { justify-content: flex-end; }
+.check-all { display: inline-flex; gap: 6px; flex-wrap: wrap; margin-right: auto; }
 .grow { flex: 1; min-width: 0; }
 .mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
 .ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

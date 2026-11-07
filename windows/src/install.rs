@@ -373,7 +373,7 @@ pub fn install(o: &Options, step: &dyn Fn(&str)) -> Result<Vec<String>, String> 
     for (want, path) in [(o.desktop, desk), (o.start_menu, menu)] {
         let Some(path) = path else { continue };
         if want {
-            if !crate::shell::create_shortcut(&path, &app, "Démarrage, services, nettoyage et entretien de Windows") {
+            if !crate::shell::create_shortcut(&path, &app, crate::langue::tr("Démarrage, services, nettoyage et entretien de Windows")) {
                 notes.push(format!("Raccourci non créé : {}", path.display()));
             }
         } else {
@@ -392,7 +392,7 @@ pub fn install(o: &Options, step: &dyn Fn(&str)) -> Result<Vec<String>, String> 
     reg_set_str(k, "UninstallString", &m);
     reg_set_str(k, "ModifyPath", &m);
     reg_set_str(k, "QuietUninstallString", &format!("\"{}\" --uninstall", maint.display()));
-    reg_set_str(k, "Comments", "Démarrage, services, nettoyage et entretien de Windows, sans rien casser");
+    reg_set_str(k, "Comments", crate::langue::tr("Démarrage, services, nettoyage et entretien de Windows, sans rien casser"));
     reg_set_dword(k, "EstimatedSize", dir_size_kb(&dir));
     reg_set_dword(k, "NoRepair", 0);
     reg_set_dword(APP_KEY, "Desktop", o.desktop as u32);

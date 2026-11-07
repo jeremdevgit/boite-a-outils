@@ -31,7 +31,7 @@ final class DuplicatesModel: ObservableObject {
             func setStatus(_ s: String) { DispatchQueue.main.async { self.status = s } }
 
             // 1. Regroupement par taille
-            setStatus("Inventaire des fichiers…")
+            setStatus(String(localized: "Inventaire des fichiers…"))
             let keys: [URLResourceKey] = [.isRegularFileKey, .fileSizeKey, .contentModificationDateKey, .isSymbolicLinkKey]
             let library = FS.home.appendingPathComponent("Library").path
             var bySize: [Int64: [FoundFile]] = [:]
@@ -50,7 +50,7 @@ final class DuplicatesModel: ObservableObject {
             var result: [DupGroup] = []
             for (i, group) in candidates.enumerated() {
                 if self.cancelled { break }
-                if i % 20 == 0 { setStatus("Comparaison du contenu… \(i)/\(candidates.count)") }
+                if i % 20 == 0 { setStatus(String(localized: "Comparaison du contenu… \(i)/\(candidates.count)")) }
                 for partial in Self.split(group, limit: 65_536) {
                     for full in Self.split(partial, limit: nil) {
                         // Le plus ancien est conservé, les autres sont présélectionnés.
@@ -117,7 +117,7 @@ struct DuplicatesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Doublons", subtitle: "Fichiers identiques au contenu près (empreinte SHA-256)",
+            PageHeader(title: String(localized: "Doublons"), subtitle: String(localized: "Fichiers identiques au contenu près (empreinte SHA-256)"),
                        icon: "square.on.square", color: .teal)
 
             HStack(spacing: 14) {
@@ -140,11 +140,11 @@ struct DuplicatesView: View {
                 VStack(spacing: 10) { ProgressView(); Text(model.status).foregroundStyle(.secondary) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !model.scannedOnce {
-                EmptyState(icon: "square.on.square", title: "Rechercher les doublons",
-                           message: "Les fichiers sont comparés octet par octet via leur empreinte. Le plus ancien de chaque groupe est conservé par défaut.",
-                           actionTitle: "Rechercher") { model.scan() }
+                EmptyState(icon: "square.on.square", title: String(localized: "Rechercher les doublons"),
+                           message: String(localized: "Les fichiers sont comparés octet par octet via leur empreinte. Le plus ancien de chaque groupe est conservé par défaut."),
+                           actionTitle: String(localized: "Rechercher")) { model.scan() }
             } else if model.groups.isEmpty {
-                EmptyState(icon: "checkmark.seal", title: "Aucun doublon", message: "Aucun fichier en double dans ce dossier.")
+                EmptyState(icon: "checkmark.seal", title: String(localized: "Aucun doublon"), message: String(localized: "Aucun fichier en double dans ce dossier."))
             } else {
                 List {
                     ForEach($model.groups) { $g in

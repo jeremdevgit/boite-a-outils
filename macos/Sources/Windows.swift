@@ -12,16 +12,16 @@ final class WindowSnapper: ObservableObject {
 
         var title: String {
             switch self {
-            case .left: "Moitié gauche"
-            case .right: "Moitié droite"
-            case .top: "Moitié haute"
-            case .bottom: "Moitié basse"
-            case .maximize: "Plein écran (agrandir)"
-            case .center: "Centrer"
-            case .topLeft: "Quart haut gauche"
-            case .topRight: "Quart haut droit"
-            case .bottomLeft: "Quart bas gauche"
-            case .bottomRight: "Quart bas droit"
+            case .left: String(localized: "Moitié gauche")
+            case .right: String(localized: "Moitié droite")
+            case .top: String(localized: "Moitié haute")
+            case .bottom: String(localized: "Moitié basse")
+            case .maximize: String(localized: "Plein écran (agrandir)")
+            case .center: String(localized: "Centrer")
+            case .topLeft: String(localized: "Quart haut gauche")
+            case .topRight: String(localized: "Quart haut droit")
+            case .bottomLeft: String(localized: "Quart bas gauche")
+            case .bottomRight: String(localized: "Quart bas droit")
             }
         }
 
@@ -143,7 +143,7 @@ struct WindowsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Fenêtres", subtitle: "Rangez vos fenêtres au clavier : moitiés, quarts, plein écran",
+            PageHeader(title: String(localized: "Fenêtres"), subtitle: String(localized: "Rangez vos fenêtres au clavier : moitiés, quarts, plein écran"),
                        icon: "rectangle.split.2x2.fill", color: .indigo) {
                 Toggle("Activer les raccourcis", isOn: $snapper.enabled).toggleStyle(.switch)
             }

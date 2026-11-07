@@ -126,12 +126,12 @@ final class UninstallerModel: ObservableObject {
             DispatchQueue.main.async {
                 self.working = false
                 if failed.isEmpty {
-                    self.message = includeApp ? "\(app.name) a été désinstallé (éléments placés dans la corbeille)."
-                                              : "Les fichiers résiduels ont été supprimés."
+                    self.message = includeApp ? String(localized: "\(app.name) a été désinstallé (éléments placés dans la corbeille).")
+                                              : String(localized: "Les fichiers résiduels ont été supprimés.")
                     if includeApp { self.apps.removeAll { $0.id == app.id }; self.selectedID = nil }
                     else { self.findLeftovers() }
                 } else {
-                    self.message = "\(failed.count) élément(s) n'ont pas pu être supprimés : " + failed.map(\.lastPathComponent).joined(separator: ", ")
+                    self.message = String(localized: "\(failed.count) élément(s) n'ont pas pu être supprimés : ") + failed.map(\.lastPathComponent).joined(separator: ", ")
                 }
             }
         }
@@ -144,7 +144,7 @@ struct UninstallerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Désinstallateur", subtitle: "Supprimez une application et tous ses fichiers associés",
+            PageHeader(title: String(localized: "Désinstallateur"), subtitle: String(localized: "Supprimez une application et tous ses fichiers associés"),
                        icon: "xmark.app.fill", color: .red) {
                 Button { model.load() } label: { Label("Actualiser", systemImage: "arrow.clockwise") }
             }
@@ -187,7 +187,7 @@ struct UninstallerView: View {
                     Image(nsImage: NSWorkspace.shared.icon(forFile: app.url.path)).resizable().frame(width: 64, height: 64)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(app.name).font(.title2.bold())
-                        Text([app.version.isEmpty ? nil : "Version \(app.version)", app.bundleID].compactMap { $0 }.joined(separator: " · "))
+                        Text([app.version.isEmpty ? nil : String(localized: "Version \(app.version)"), app.bundleID].compactMap { $0 }.joined(separator: " · "))
                             .foregroundStyle(.secondary).textSelection(.enabled)
                         Text("Application : \(app.size.map(formatBytes) ?? "…")").foregroundStyle(.secondary)
                     }
@@ -231,8 +231,8 @@ struct UninstallerView: View {
         } else {
             VStack(spacing: 10) {
                 if let m = model.message { Label(m, systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
-                EmptyState(icon: "app.dashed", title: "Sélectionnez une application",
-                           message: "La Boîte à outils retrouve ses préférences, caches, conteneurs et agents de lancement pour une désinstallation complète.")
+                EmptyState(icon: "app.dashed", title: String(localized: "Sélectionnez une application"),
+                           message: String(localized: "La Boîte à outils retrouve ses préférences, caches, conteneurs et agents de lancement pour une désinstallation complète."))
             }
         }
     }

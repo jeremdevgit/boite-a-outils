@@ -71,7 +71,7 @@ final class DevPurgeModel: ObservableObject {
                 if self.cancelled { break }
                 guard (try? u.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else { continue }
                 n += 1
-                if n % 500 == 0 { let c = n; DispatchQueue.main.async { self.status = "\(c) dossiers parcourus…" } }
+                if n % 500 == 0 { let c = n; DispatchQueue.main.async { self.status = String(localized: "\(c) dossiers parcourus…") } }
                 let name = u.lastPathComponent
                 if skip.contains(u.path) { en?.skipDescendants(); continue }
                 if let rule = DevRule.all.first(where: { $0.matches(u) }) {
@@ -83,7 +83,7 @@ final class DevPurgeModel: ObservableObject {
                     en?.skipDescendants()     // dossiers cachés (caches, configs) : hors périmètre
                 }
             }
-            DispatchQueue.main.async { self.status = "Calcul des tailles…" }
+            DispatchQueue.main.async { self.status = String(localized: "Calcul des tailles…") }
             var sizes = [Int64](repeating: 0, count: found.count)
             let urls = found.map(\.url)
             sizes.withUnsafeMutableBufferPointer { buf in
@@ -111,7 +111,7 @@ final class DevPurgeModel: ObservableObject {
     func purge() {
         let work = selected
         scanning = true
-        status = "Suppression…"
+        status = String(localized: "Suppression…")
         DispatchQueue.global(qos: .userInitiated).async {
             var freed: Int64 = 0
             var removed = Set<UUID>()
@@ -124,7 +124,7 @@ final class DevPurgeModel: ObservableObject {
             DispatchQueue.main.async {
                 self.items.removeAll { removed.contains($0.id) }
                 self.scanning = false
-                self.message = "\(formatBytes(freed)) libérés (\(removed.count) dossiers)."
+                self.message = String(localized: "\(formatBytes(freed)) libérés (\(removed.count) dossiers).")
             }
         }
     }
@@ -136,7 +136,7 @@ struct DevPurgeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Projets de dev", subtitle: "node_modules, Pods, target, .build, venv… régénérables à la demande",
+            PageHeader(title: String(localized: "Projets de dev"), subtitle: String(localized: "node_modules, Pods, target, .build, venv… régénérables à la demande"),
                        icon: "curlybraces.square.fill", color: .mint)
 
             HStack(spacing: 14) {
@@ -160,11 +160,11 @@ struct DevPurgeView: View {
                 VStack(spacing: 10) { ProgressView(); Text(model.status).foregroundStyle(.secondary) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !model.scannedOnce {
-                EmptyState(icon: "curlybraces", title: "Alléger vos projets",
-                           message: "Recherche les dépendances et fichiers de compilation de vos projets. Ceux inactifs depuis plus de 30 jours sont présélectionnés.",
-                           actionTitle: "Rechercher") { model.scan() }
+                EmptyState(icon: "curlybraces", title: String(localized: "Alléger vos projets"),
+                           message: String(localized: "Recherche les dépendances et fichiers de compilation de vos projets. Ceux inactifs depuis plus de 30 jours sont présélectionnés."),
+                           actionTitle: String(localized: "Rechercher")) { model.scan() }
             } else if model.items.isEmpty {
-                EmptyState(icon: "checkmark.seal", title: "Rien à purger", message: "Aucun dossier de dépendances trouvé.")
+                EmptyState(icon: "checkmark.seal", title: String(localized: "Rien à purger"), message: String(localized: "Aucun dossier de dépendances trouvé."))
             } else {
                 List($model.items) { $a in
                     HStack(spacing: 10) {

@@ -39,7 +39,7 @@ final class SystemMonitor: ObservableObject {
         }
         readBattery()
         gpu = GPU.utilization
-        hottest = Sensors.readAll().filter { $0.group.hasPrefix("Processeur") }.map(\.value).max()
+        hottest = Sensors.readAll().filter { ["Tp", "TC", "Te"].contains(String($0.key.prefix(2))) }.map(\.value).max()
     }
 
     private func readCPU() -> Double {
@@ -133,7 +133,7 @@ struct MenuBarPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Boîte à outils").font(.headline)
-            meter("Processeur", "cpu", monitor.cpu / 100, "\(Int(monitor.cpu)) %", .purple)
+            meter(String(localized: "Processeur"), "cpu", monitor.cpu / 100, "\(Int(monitor.cpu)) %", .purple)
             if let g = monitor.gpu { meter("GPU", "cpu.fill", g / 100, "\(Int(g)) %", .orange) }
             if let t = monitor.hottest {
                 HStack {
@@ -142,16 +142,16 @@ struct MenuBarPanel: View {
                     Text(String(format: "%.0f °C", t)).monospacedDigit().foregroundStyle(t > 85 ? .red : .secondary)
                 }
             }
-            meter("Mémoire", "memorychip", monitor.memRatio, "\(formatBytes(monitor.memUsed)) / \(formatBytes(monitor.memTotal))", .green)
-            meter("Disque", "internaldrive", monitor.diskRatio, "\(formatBytes(monitor.diskFree)) libres", .indigo)
+            meter(String(localized: "Mémoire"), "memorychip", monitor.memRatio, "\(formatBytes(monitor.memUsed)) / \(formatBytes(monitor.memTotal))", .green)
+            meter(String(localized: "Disque"), "internaldrive", monitor.diskRatio, String(localized: "\(formatBytes(monitor.diskFree)) libres"), .indigo)
             HStack {
                 Label("Réseau", systemImage: "network")
                 Spacer()
                 Text("↓ \(formatRate(monitor.netIn))   ↑ \(formatRate(monitor.netOut))").monospacedDigit().foregroundStyle(.secondary)
             }
             if let b = monitor.battery {
-                meter("Batterie", monitor.charging ? "battery.100.bolt" : "battery.75", Double(b) / 100,
-                      "\(b) %\(monitor.charging ? " · en charge" : "")", b < 20 ? .red : .green)
+                meter(String(localized: "Batterie"), monitor.charging ? "battery.100.bolt" : "battery.75", Double(b) / 100,
+                      "\(b) %" + (monitor.charging ? String(localized: " · en charge") : ""), b < 20 ? .red : .green)
             }
             Divider()
             HStack {

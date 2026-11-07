@@ -180,7 +180,7 @@ final class BatteryModel: ObservableObject {
            let root = (o["SPBluetoothDataType"] as? [[String: Any]])?.first,
            let connected = root["device_connected"] as? [[String: Any]] {
             let parts = [("device_batteryLevelMain", ""), ("device_batteryLevel", ""), ("device_batteryLevelLeft", "gauche"),
-                         ("device_batteryLevelRight", "droite"), ("device_batteryLevelCase", "boîtier")]
+                         ("device_batteryLevelRight", "droite"), ("device_batteryLevelCase", String(localized: "boîtier"))]
             for entry in connected {
                 for (name, props) in entry {
                     guard let p = props as? [String: Any] else { continue }
@@ -197,7 +197,7 @@ final class BatteryModel: ObservableObject {
         for d in IORegistry.all(ofClass: "AppleDeviceManagementHIDEventService") + IORegistry.all(ofClass: "IOHIDDevice") {
             if let lvl = IORegistry.int(d["BatteryPercent"]), let name = d["Product"] as? String,
                !list.contains(where: { $0.name == name }) {
-                list.append(BluetoothBattery(name: name, kind: "Accessoire", part: "", level: lvl))
+                list.append(BluetoothBattery(name: name, kind: String(localized: "Accessoire"), part: "", level: lvl))
             }
         }
         return list
@@ -225,7 +225,7 @@ struct BatteryView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageHeader(title: "Batterie", subtitle: "Santé, usure, charge et appareils Bluetooth",
+                PageHeader(title: String(localized: "Batterie"), subtitle: String(localized: "Santé, usure, charge et appareils Bluetooth"),
                            icon: "battery.100.bolt", color: .green) {
                     Button("Réglages Batterie…") {
                         Permissions.openSettings("x-apple.systempreferences:com.apple.Battery-Settings.extension")
@@ -246,7 +246,7 @@ struct BatteryView: View {
                         ProgressView().frame(maxWidth: .infinity)
                     }
                     bluetoothCard
-                    Card(title: "Limiter la charge (façon AlDente)", icon: "bolt.badge.clock") {
+                    Card(title: String(localized: "Limiter la charge (façon AlDente)"), icon: "bolt.badge.clock") {
                         Text("macOS sait limiter lui-même la charge pour préserver la batterie (« Recharge optimisée » et, sur les macOS récents, une limite de charge réglable). C'est la méthode la plus sûre, sans outil tiers.")
                             .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         Button("Ouvrir les réglages de charge…") {
@@ -274,37 +274,37 @@ struct BatteryView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
-                    stat(String(format: "%+.1f W", d.watts), d.watts >= 0 ? "Entrée batterie" : "Sortie batterie")
-                    if let t = d.temperature { stat(String(format: "%.1f °C", t), "Température") }
-                    if let s = d.systemWatts { stat(String(format: "%.1f W", s), "Consommation du Mac") }
+                    stat(String(format: "%+.1f W", d.watts), d.watts >= 0 ? String(localized: "Entrée batterie") : String(localized: "Sortie batterie"))
+                    if let t = d.temperature { stat(String(format: "%.1f °C", t), String(localized: "Température")) }
+                    if let s = d.systemWatts { stat(String(format: "%.1f W", s), String(localized: "Consommation du Mac")) }
                 }
             }
         }
     }
 
     private func health(_ d: BatteryDetails) -> some View {
-        Card(title: "Santé", icon: "heart.fill") {
-            row("État (macOS)", d.condition.isEmpty ? "—" : (d.condition == "Good" ? "Normal" : d.condition))
-            row("Capacité maximale (Apple)", d.appleMaxCapacity.map { "\($0) %" } ?? "—")
-            row("Capacité réelle mesurée", String(format: "%.1f %%", d.healthMeasured))
+        Card(title: String(localized: "Santé"), icon: "heart.fill") {
+            row(String(localized: "État (macOS)"), d.condition.isEmpty ? "—" : (d.condition == "Good" ? String(localized: "Normal") : d.condition))
+            row(String(localized: "Capacité maximale (Apple)"), d.appleMaxCapacity.map { "\($0) %" } ?? "—")
+            row(String(localized: "Capacité réelle mesurée"), String(format: "%.1f %%", d.healthMeasured))
             ProgressView(value: min(d.healthMeasured / 100, 1)).tint(d.healthMeasured < 80 ? .orange : .green)
-            row("Capacité d'origine", "\(d.designMAh) mAh")
-            row("Capacité à pleine charge", "\(d.fullMAh) mAh")
-            row("Cycles de charge", "\(d.cycles) / \(d.designCycles)")
+            row(String(localized: "Capacité d'origine"), "\(d.designMAh) mAh")
+            row(String(localized: "Capacité à pleine charge"), "\(d.fullMAh) mAh")
+            row(String(localized: "Cycles de charge"), "\(d.cycles) / \(d.designCycles)")
             ProgressView(value: min(Double(d.cycles) / Double(max(d.designCycles, 1)), 1)).tint(.blue)
             Text(verdict(d)).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func charge(_ d: BatteryDetails) -> some View {
-        Card(title: "Alimentation", icon: "powerplug.fill") {
-            row("Chargeur", d.pluggedIn ? "Branché" : "Débranché")
+        Card(title: String(localized: "Alimentation"), icon: "powerplug.fill") {
+            row(String(localized: "Chargeur"), d.pluggedIn ? String(localized: "Branché") : String(localized: "Débranché"))
             if d.pluggedIn {
-                if let w = d.adapterWatts { row("Puissance du chargeur", "\(w) W") }
-                if !d.adapterName.isEmpty { row("Modèle", d.adapterName) }
-                if let v = d.adapterVoltage, let a = d.adapterCurrent { row("Tension / courant négociés", String(format: "%.1f V · %.2f A", v, a)) }
-                if let w = d.inputWatts { row("Puissance reçue (mesurée)", String(format: "%.1f W", w)) }
-                row("En charge", d.charging ? "Oui" : (d.fullyCharged ? "Non (pleine)" : "Non (en pause)"))
+                if let w = d.adapterWatts { row(String(localized: "Puissance du chargeur"), "\(w) W") }
+                if !d.adapterName.isEmpty { row(String(localized: "Modèle"), d.adapterName) }
+                if let v = d.adapterVoltage, let a = d.adapterCurrent { row(String(localized: "Tension / courant négociés"), String(format: "%.1f V · %.2f A", v, a)) }
+                if let w = d.inputWatts { row(String(localized: "Puissance reçue (mesurée)"), String(format: "%.1f W", w)) }
+                row(String(localized: "En charge"), d.charging ? String(localized: "Oui") : (d.fullyCharged ? String(localized: "Non (pleine)") : String(localized: "Non (en pause)")))
                 if !d.charging && !d.fullyCharged {
                     Text("La charge peut être suspendue par la recharge optimisée, une limite de charge ou une température élevée.")
                         .font(.caption).foregroundStyle(.secondary)
@@ -317,13 +317,13 @@ struct BatteryView: View {
                 Text("Branchez un chargeur pour voir sa puissance, la tension négociée et le détail dans « Câbles & ports ».")
                     .font(.callout).foregroundStyle(.secondary)
             }
-            row("Tension batterie", String(format: "%.2f V", d.voltage))
-            row("Courant", "\(d.amperage) mA")
+            row(String(localized: "Tension batterie"), String(format: "%.2f V", d.voltage))
+            row(String(localized: "Courant"), "\(d.amperage) mA")
         }
     }
 
     private var historyCard: some View {
-        Card(title: "Historique de santé", icon: "chart.xyaxis.line") {
+        Card(title: String(localized: "Historique de santé"), icon: "chart.xyaxis.line") {
             if model.history.count < 2 {
                 Text("La capacité est enregistrée une fois par jour quand la Boîte à outils est ouverte. La courbe apparaîtra dès le deuxième relevé.")
                     .foregroundStyle(.secondary)
@@ -340,16 +340,16 @@ struct BatteryView: View {
     }
 
     private func technical(_ d: BatteryDetails) -> some View {
-        Card(title: "Informations techniques", icon: "info.circle") {
-            row("Numéro de série", d.serial.isEmpty ? "—" : d.serial)
-            row("Contrôleur de jauge", d.gauge.isEmpty ? "—" : d.gauge)
-            row("Capacité nominale", "\(d.nominalMAh) mAh")
-            row("Énergie stockée", String(format: "%.1f Wh", Double(d.currentMAh) * d.voltage / 1000))
+        Card(title: String(localized: "Informations techniques"), icon: "info.circle") {
+            row(String(localized: "Numéro de série"), d.serial.isEmpty ? "—" : d.serial)
+            row(String(localized: "Contrôleur de jauge"), d.gauge.isEmpty ? "—" : d.gauge)
+            row(String(localized: "Capacité nominale"), "\(d.nominalMAh) mAh")
+            row(String(localized: "Énergie stockée"), String(format: "%.1f Wh", Double(d.currentMAh) * d.voltage / 1000))
         }
     }
 
     private var bluetoothCard: some View {
-        Card(title: "Appareils Bluetooth", icon: "airpodspro") {
+        Card(title: String(localized: "Appareils Bluetooth"), icon: "airpodspro") {
             if model.bluetooth.isEmpty {
                 Text("Aucune batterie d'appareil connecté détectée (AirPods, souris, clavier…).").foregroundStyle(.secondary)
             }
@@ -379,17 +379,17 @@ struct BatteryView: View {
     }
 
     private func statusText(_ d: BatteryDetails) -> String {
-        if d.charging { return "En charge" }
-        if d.pluggedIn { return d.fullyCharged ? "Chargée, sur secteur" : "Sur secteur (charge en pause)" }
-        return "Sur batterie"
+        if d.charging { return String(localized: "En charge") }
+        if d.pluggedIn { return d.fullyCharged ? String(localized: "Chargée, sur secteur") : String(localized: "Sur secteur (charge en pause)") }
+        return String(localized: "Sur batterie")
     }
 
     private func verdict(_ d: BatteryDetails) -> String {
         let h = Double(d.appleMaxCapacity ?? Int(d.healthMeasured))
         let wear = Double(d.cycles) / Double(max(d.designCycles, 1)) * 100
-        let base = h >= 90 ? "Batterie en très bon état." : h >= 80 ? "Usure normale : la batterie fonctionne correctement." :
-                   "Capacité inférieure à 80 % : Apple considère qu'un remplacement peut être envisagé."
-        return base + String(format: " Environ %.0f %% de la durée de vie prévue en cycles a été utilisée.", wear)
+        let base = h >= 90 ? String(localized: "Batterie en très bon état.") : h >= 80 ? String(localized: "Usure normale : la batterie fonctionne correctement.") :
+                   String(localized: "Capacité inférieure à 80 % : Apple considère qu'un remplacement peut être envisagé.")
+        return base + String(format: String(localized: " Environ %.0f %% de la durée de vie prévue en cycles a été utilisée."), wear)
     }
 
     private func duration(_ m: Int) -> String { m >= 60 ? "\(m / 60) h \(String(format: "%02d", m % 60))" : "\(m) min" }

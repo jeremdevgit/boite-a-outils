@@ -37,6 +37,9 @@ jobs:
             windows/target
           key: cargo-${{ runner.os }}-${{ hashFiles('windows/Cargo.lock') }}
 
+      - name: Tests du moteur de recherche (données temporaires)
+        run: cargo test --locked --manifest-path tests/search-engine/Cargo.toml
+
       - name: Compilation et contrôles (chemins, identifiants, Runtime Visual C++)
         run: ./tools/release.ps1 -Out dist -Ci
 

@@ -73,10 +73,10 @@ final class ProcessesModel: ObservableObject {
         if !force, let app = NSRunningApplication(processIdentifier: p.pid) {
             app.terminate()
         } else if kill(p.pid, force ? SIGKILL : SIGTERM) != 0 {
-            message = "Impossible de quitter « \(p.name) » (processus système ou d'un autre utilisateur)."
+            message = String(localized: "Impossible de quitter « \(p.name) » (processus système ou d'un autre utilisateur).")
             return
         }
-        message = "« \(p.name) » \(force ? "forcé à quitter" : "quitté")."
+        message = force ? String(localized: "« \(p.name) » forcé à quitter.") : String(localized: "« \(p.name) » quitté.")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { self.refresh() }
     }
 }
@@ -109,13 +109,13 @@ struct ProcessDetailsSheet: View {
                 Spacer()
             }
             Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
-                row("PID / parent", "\(d.pid) / \(d.ppid)")
-                row("Utilisateur", d.user)
-                row("Démarré", d.started)
-                row("Exécutable", d.path.isEmpty ? "—" : d.path)
-                row("Arguments", d.args.isEmpty ? "—" : d.args)
-                row("Signature", d.signature?.label ?? "—")
-                row("Fichiers ouverts", "\(d.openFiles)")
+                row(String(localized: "PID / parent"), "\(d.pid) / \(d.ppid)")
+                row(String(localized: "Utilisateur"), d.user)
+                row(String(localized: "Démarré"), d.started)
+                row(String(localized: "Exécutable"), d.path.isEmpty ? "—" : d.path)
+                row(String(localized: "Arguments"), d.args.isEmpty ? "—" : d.args)
+                row(String(localized: "Signature"), d.signature?.label ?? "—")
+                row(String(localized: "Fichiers ouverts"), "\(d.openFiles)")
             }
             if d.signature?.suspicious == true {
                 Label("Ce programme n'a pas de signature valide d'un développeur identifié.", systemImage: "exclamationmark.triangle.fill")
@@ -151,7 +151,7 @@ struct ProcessesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Processus", subtitle: "Ce qui consomme le processeur et la mémoire en ce moment",
+            PageHeader(title: String(localized: "Processus"), subtitle: String(localized: "Ce qui consomme le processeur et la mémoire en ce moment"),
                        icon: "cpu", color: .purple) {
                 Toggle("Mes processus", isOn: $model.onlyMine).toggleStyle(.checkbox)
                 Picker("", selection: $model.sortByMemory) {

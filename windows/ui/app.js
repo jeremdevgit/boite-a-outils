@@ -13,21 +13,23 @@ const log = msg => native({ cmd: 'log', msg: String(msg) });
 addEventListener('error', e => log('ERREUR JS : ' + e.message + ' @' + e.lineno));
 addEventListener('unhandledrejection', e => log('PROMESSE : ' + (e.reason?.message || e.reason)));
 
-const nf1 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
-const nf0 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
+const nf1 = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 1 });
+const nf0 = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
+// unités de taille : octets en français, bytes ailleurs
+const UNITS = LANG === 'fr' ? { b: 'o', k: 'Ko', m: 'Mo', g: 'Go', t: 'To' } : { b: 'B', k: 'KB', m: 'MB', g: 'GB', t: 'TB' };
 function fmtSize(b) {
   b = +b || 0;
-  if (b >= 1e12) return nf1.format(b / 1e12) + ' To';
-  if (b >= 1e9) return nf1.format(b / 1e9) + ' Go';
-  if (b >= 1e6) return nf0.format(b / 1e6) + ' Mo';
-  if (b >= 1e3) return nf0.format(b / 1e3) + ' Ko';
-  return b + ' o';
+  if (b >= 1e12) return nf1.format(b / 1e12) + ' ' + UNITS.t;
+  if (b >= 1e9) return nf1.format(b / 1e9) + ' ' + UNITS.g;
+  if (b >= 1e6) return nf0.format(b / 1e6) + ' ' + UNITS.m;
+  if (b >= 1e3) return nf0.format(b / 1e3) + ' ' + UNITS.k;
+  return b + ' ' + UNITS.b;
 }
-const fmtDate = d => { const t = typeof d === 'number' ? new Date(d * 1000) : new Date(d); return isNaN(t) ? '' : t.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }); };
-const fmtDateTime = d => { const t = typeof d === 'number' ? new Date(d * 1000) : new Date(d); return isNaN(t) ? '' : t.toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
-const fmtDuration = s => { const d = Math.floor(s / 86400), h = Math.floor(s / 3600) % 24, m = Math.floor(s / 60) % 60; return d ? `${d} j ${h} h` : h ? `${h} h ${m} min` : `${m} min`; };
+const fmtDate = d => { const t = typeof d === 'number' ? new Date(d * 1000) : new Date(d); return isNaN(t) ? '' : t.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }); };
+const fmtDateTime = d => { const t = typeof d === 'number' ? new Date(d * 1000) : new Date(d); return isNaN(t) ? '' : t.toLocaleString(LOCALE, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+const fmtDuration = s => { const d = Math.floor(s / 86400), h = Math.floor(s / 3600) % 24, m = Math.floor(s / 60) % 60; return d ? trad('{d} j {h} h', { d, h }) : h ? trad('{h} h {m} min', { h, m }) : trad('{m} min', { m }); };
 const baseName = p => String(p).split('\\').filter(Boolean).pop() || p;
-const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
+const plural = (n, one, many) => tradn(n, '{n} ' + one, '{n} ' + many);
 
 let toastTimer = 0;
 function toast(msg) {
@@ -48,7 +50,21 @@ function modal(title, html, buttons = [['ok', 'OK', 'primary']]) {
     box.querySelector('.btn.primary, .btn.danger')?.focus();
   });
 }
+/** Boutons « Tout sélectionner / Tout désélectionner » pour les cases `sel` du bloc `scope` qui les contient. */
+const checkAll = (sel, scope) => `<span class="check-all"><button class="btn small" data-check-all="1" data-sel="${esc(sel)}" data-scope="${esc(scope)}">Tout sélectionner</button><button class="btn small" data-check-all="0" data-sel="${esc(sel)}" data-scope="${esc(scope)}">Tout désélectionner</button></span>`;
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-check-all]');
+  if (!b) return;
+  e.preventDefault();
+  const on = b.dataset.checkAll === '1', root = b.closest(b.dataset.scope) || document;
+  for (const i of root.querySelectorAll(b.dataset.sel)) if (!i.disabled && i.checked !== on && !i.closest('[hidden]')) { i.checked = on; i.dispatchEvent(new Event('change', { bubbles: true })); }
+});
 const confirmAction = async (title, html, ok = 'Continuer', danger = false) => (await modal(title, html, [['no', 'Annuler', ''], ['yes', ok, danger ? 'danger' : 'primary']])) === 'yes';
+
+const filterNorm = s => String(s ?? '').normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase(LOCALE);
+const filterMatch = (q, ...parts) => !q || filterNorm(parts.map(x => `${x ?? ''} ${tradTexte(String(x ?? '')) || ''}`).join(' ')).includes(filterNorm(q));
+const filterSelect = (id, label, options) => `<select class="field" id="${id}" aria-label="${esc(label)}">${options.map(([value, text]) => `<option value="${value}">${esc(text)}</option>`).join('')}</select>`;
+const sizeFilter = id => filterSelect(id, 'Taille minimale', [[0, 'Toutes les tailles'], [10e6, 'Plus de 10 Mo'], [100e6, 'Plus de 100 Mo'], [1e9, 'Plus de 1 Go']]);
 
 // ── communication avec le code natif ────────────────────────────────────
 const bao = {
@@ -125,13 +141,14 @@ const views = {};
 views.home = async (v, live) => {
   const info = state.info = await bao.call('info');
   if (!live()) return;
-  v.innerHTML =`<h1>Bonjour${info.user ? ' ' + esc(info.user) : ''}</h1><p class="lead">Un état rapide du PC et ce qui mérite votre attention. Rien n'est modifié sans votre accord, et tout est annulable depuis l'Historique.</p>
+  const greeting = trad('Bonjour{0}', { 0: info.user ? ' ' + esc(info.user) : '' });
+  v.innerHTML =`<h1 data-brut>${greeting}</h1><p class="lead">Un état rapide du PC et ce qui mérite votre attention. Rien n'est modifié sans votre accord, et tout est annulable depuis l'Historique.</p>
     ${adminNote()}
     <div class="cards">
       <div class="card glass" id="sys"><h3>Système</h3><div class="muted small" id="sys-os">…</div><div class="small" id="sys-hw"></div>
         <div class="muted small" style="margin-top:10px">Allumé depuis ${fmtDuration(info.uptime)} · <span id="sys-act"></span></div></div>
       <div class="card glass" id="live"><h3>En direct</h3>${['cpu', 'gpu', 'mem', 'net'].map(k => `<div class="row"><span class="grow">${{ cpu: 'Processeur', gpu: 'Carte graphique', mem: 'Mémoire', net: 'Réseau' }[k]}</span><span class="size" data-live="${k}">…</span></div>${k === 'net' ? '' : `<div class="bar"><i data-bar="${k}" style="width:0"></i></div>`}`).join('')}</div>
-      <div class="card glass"><h3>Disques</h3>${info.drives.map(d => { const u = d.total - d.free, pct = u / d.total; return `<div class="row"><span class="grow">${esc(d.drive)}</span><span class="size">${fmtSize(d.free)} libres sur ${fmtSize(d.total)}</span></div><div class="bar${pct > .9 ? ' hot' : ''}"><i style="width:${(pct * 100).toFixed(1)}%"></i></div>`; }).join('')}</div>
+      <div class="card glass"><h3>Disques</h3>${info.drives.map(d => { const u = d.total - d.free, pct = u / d.total; const label = trad('<span class="grow">{0}</span><span class="size">{1} libres sur {2}</span>', { 0: esc(d.drive), 1: esc(fmtSize(d.free)), 2: esc(fmtSize(d.total)) }); return `<div class="row" data-brut>${label}</div><div class="bar${pct > .9 ? ' hot' : ''}"><i style="width:${(pct * 100).toFixed(1)}%"></i></div>`; }).join('')}</div>
     </div>
     <h2>À regarder</h2><div class="list" id="recos"><div class="progress glass"><div class="spinner"></div><div>Analyse rapide du PC…</div></div></div>`;
   ps('system').then(o => {
@@ -150,7 +167,7 @@ views.home = async (v, live) => {
 
 /** Activité en direct : une mesure par seconde tant que l'accueil est affiché. */
 function liveMonitor(v, live) {
-  const rate = b => b >= 1e6 ? nf1.format(b / 1e6) + ' Mo/s' : nf0.format(b / 1e3) + ' Ko/s';
+  const rate = b => b >= 1e6 ? nf1.format(b / 1e6) + ' ' + UNITS.m + '/s' : nf0.format(b / 1e3) + ' ' + UNITS.k + '/s';
   const set = (k, text, pct) => {
     const t = $(`[data-live="${k}"]`, v); if (t) t.textContent = text;
     const b = $(`[data-bar="${k}"]`, v); if (b && pct != null) { b.style.width = Math.min(100, pct).toFixed(1) + '%'; b.parentElement.classList.toggle('hot', pct > 90); }
@@ -233,7 +250,7 @@ views.startup = async (v, live) => {
   const st = { tab: 'apps', windows: false, q: '', items: [] };
   v.innerHTML = `<h1>Démarrage</h1><p class="lead">Programmes et tâches qui se lancent tout seuls. Les couper ici fait exactement comme le Gestionnaire des tâches : rien n'est supprimé, et un clic les réactive.</p>${adminNote()}
     <div class="toolbar"><div class="chips"><span class="chip on" data-tab="apps">Applications</span><span class="chip" data-tab="tasks">Tâches planifiées</span></div>
-    <input class="field grow" id="q" placeholder="Filtrer…" style="max-width:280px"><label class="row small muted" id="winbox" hidden><input type="checkbox" id="win"> Afficher les tâches de Windows</label></div>
+    <input class="field grow" id="q" placeholder="Filtrer…" style="max-width:280px">${filterSelect("sf-state", "État", [["", "Tous les états"], ["on", "Activés"], ["off", "Désactivés"], ["broken", "Entrées cassées"]])}<label class="row small muted" id="winbox" hidden><input type="checkbox" id="win"> Afficher les tâches de Windows</label></div>
     <div class="list" id="list"><div class="spinner big"></div></div>`;
   const load = async () => {
     $('#list', v).innerHTML = '<div class="spinner big"></div>';
@@ -244,7 +261,7 @@ views.startup = async (v, live) => {
   };
   const render = () => {
     const q = st.q.toLowerCase();
-    let items = st.items.filter(i => (st.tab === 'apps' ? i.kind !== 'task' : i.kind === 'task') && (!q || (i.name + ' ' + i.command + ' ' + i.company).toLowerCase().includes(q)));
+    let items = st.items.filter(i => (st.tab === 'apps' ? i.kind !== 'task' : i.kind === 'task') && filterMatch(q, i.name, i.command, i.company) && (!$('#sf-state', v).value || ($('#sf-state', v).value === 'on' ? i.enabled : $('#sf-state', v).value === 'off' ? !i.enabled : !i.exists)));
     items.sort((a, b) => (b.enabled - a.enabled) || a.name.localeCompare(b.name));
     $('#winbox', v).hidden = st.tab !== 'tasks';
     $('#list', v).innerHTML = items.length ? items.map(startupItem).join('') : '<div class="empty">Rien à afficher</div>';
@@ -275,6 +292,7 @@ views.startup = async (v, live) => {
     }
   });
   $('#q', v).oninput = e => { st.q = e.target.value; render(); };
+  $('#sf-state', v).onchange = render;
   $('#win', v).onchange = e => { st.windows = e.target.checked; load(); };
   await load();
 };
@@ -306,11 +324,11 @@ views.services = async (v, live) => {
   const st = { tab: 'apps', q: '', running: false, items: [] };
   v.innerHTML = `<h1>Services</h1><p class="lead">Programmes qui tournent en arrière-plan sans fenêtre. Le plus sûr pour alléger le PC est de passer un service en <b>Manuel</b> : il ne démarre que quand un programme en a besoin. Les services vitaux de Windows sont verrouillés.</p>${adminNote()}
     <div class="toolbar"><div class="chips"><span class="chip on" data-tab="apps">Programmes installés</span><span class="chip" data-tab="win">Windows</span></div>
-    <input class="field grow" id="q" placeholder="Filtrer…" style="max-width:280px"><label class="row small muted"><input type="checkbox" id="run"> En cours seulement</label></div>
+    <input class="field grow" id="q" placeholder="Filtrer…" style="max-width:280px">${filterSelect("svc-start", "Mode de démarrage", [["", "Tous les modes"], ["auto", "Automatique"], ["demand", "Manuel"], ["disabled", "Désactivé"]])}<label class="row small muted"><input type="checkbox" id="run"> En cours seulement</label></div>
     <div class="list" id="list"><div class="spinner big"></div></div>`;
   const render = () => {
     const q = st.q.toLowerCase();
-    const items = st.items.filter(s => (st.tab === 'apps' ? !s.microsoft : s.microsoft) && (!st.running || s.state === 'Running') && (!q || (s.name + ' ' + s.display + ' ' + s.company + ' ' + s.description).toLowerCase().includes(q)))
+    const items = st.items.filter(s => (st.tab === 'apps' ? !s.microsoft : s.microsoft) && (!st.running || s.state === 'Running') && filterMatch(q, s.name, s.display, s.company, s.description) && (!$('#svc-start', v).value || ($('#svc-start', v).value === 'auto' ? ['auto', 'delayed-auto'].includes(startOf(s)) : startOf(s) === $('#svc-start', v).value)))
       .sort((a, b) => ((b.state === 'Running') - (a.state === 'Running')) || a.display.localeCompare(b.display));
     $('#list', v).innerHTML = items.length ? items.slice(0, 400).map(serviceItem).join('') : '<div class="empty">Rien à afficher</div>';
   };
@@ -352,6 +370,7 @@ views.services = async (v, live) => {
     } catch (err) { toast('Échec : ' + err.message); sel.value = from; sel.disabled = false; }
   });
   $('#q', v).oninput = e => { st.q = e.target.value; render(); };
+  $('#svc-start', v).onchange = render;
   $('#run', v).onchange = e => { st.running = e.target.checked; render(); };
   await load();
 };
@@ -377,11 +396,11 @@ function serviceItem(s) {
 views.processes = async (v, live) => {
   const st = { sort: 'ram', items: [], q: '' };
   v.innerHTML = `<h1>Processus</h1><p class="lead">Ce qui tourne en ce moment, regroupé par programme. Terminer un processus est immédiat mais temporaire : pour qu'un programme ne revienne plus, coupez-le dans Démarrage ou Services.</p>
-    <div class="toolbar"><input class="field grow" id="q" placeholder="Filtrer…" style="max-width:280px"><button class="btn" id="refresh">Actualiser</button><span class="muted small" id="total"></span></div>
+    <div class="toolbar"><input class="field grow" id="q" placeholder="Filtrer…" style="max-width:280px">${sizeFilter("proc-size")}<label class="row small muted"><input type="checkbox" id="proc-active"> Processeur actif</label><button class="btn" id="refresh">Actualiser</button><span class="muted small" id="total"></span></div>
     <div class="scroll-x"><table class="table"><thead><tr><th class="sort" data-s="name">Programme</th><th class="r sort" data-s="count">Nb</th><th class="r sort" data-s="ram">Mémoire</th><th class="r sort" data-s="cpu">Processeur</th><th class="hide-s">Éditeur</th><th></th></tr></thead><tbody id="rows"><tr><td colspan="6"><div class="spinner big"></div></td></tr></tbody></table></div>`;
   const render = () => {
     const q = st.q.toLowerCase();
-    const items = st.items.filter(p => !q || (p.name + ' ' + p.description + ' ' + p.company).toLowerCase().includes(q));
+    const items = st.items.filter(p => filterMatch(q, p.name, p.description, p.company) && p.ram >= +$('#proc-size', v).value && (!$('#proc-active', v).checked || p.cpu > 0));
     const k = st.sort;
     items.sort((a, b) => k === 'name' ? a.name.localeCompare(b.name) : b[k] - a[k]);
     $('#rows', v).innerHTML = items.slice(0, 300).map(p => {
@@ -411,6 +430,8 @@ views.processes = async (v, live) => {
     catch (err) { toast('Échec : ' + err.message); }
   });
   $('#q', v).oninput = e => { st.q = e.target.value; render(); };
+  $('#proc-size', v).onchange = render;
+  $('#proc-active', v).onchange = render;
   await load();
 };
 
@@ -426,7 +447,7 @@ views.clean = async (v, live, done = '') => {
     <label class="item glass${c.locked ? ' off' : ''}"><input type="checkbox" data-id="${c.id}"${c.default && !c.locked && c.size > 0 ? ' checked' : ''}${c.locked ? ' disabled' : ''}>
       <div><div class="title">${esc(c.label)} ${c.risk === 'prudence' ? '<span class="badge warn">À lire</span>' : '<span class="badge ok">Sans risque</span>'}${c.locked ? '<span class="badge lock">Administrateur requis</span>' : ''}</div><div class="what">${esc(c.desc)}</div></div>
       <div class="side"><span class="size">${fmtSize(c.size)}</span><span class="muted small">${c.id === 'recycle' ? plural(c.count, 'élément', 'éléments') : plural(c.count, 'fichier', 'fichiers')}</span></div></label>`).join('')}</div>`).join('')
-    + `<div class="card glass row sticky" style="margin-top:18px"><div class="grow"><b id="sel-size"></b> <span class="muted" id="sel-count"></span></div><button class="btn primary" id="go">Nettoyer</button></div><div id="result"></div>`;
+    + `<div class="card glass row sticky" style="margin-top:18px"><div class="grow"><b id="sel-size"></b> <span class="muted" id="sel-count"></span></div>${checkAll('input[data-id]', '#cats')}<button class="btn primary" id="go">Nettoyer</button></div><div id="result"></div>`;
   const update = () => {
     const ids = $$('input[data-id]:checked', box).map(i => i.dataset.id);
     const sz = cats.filter(c => ids.includes(c.id)).reduce((s, c) => s + c.size, 0);
@@ -471,7 +492,7 @@ views.ghosts = async (v, live) => {
     { id: 'shortcuts', t: 'Raccourcis cassés', d: 'Raccourcis du Bureau, du menu Démarrer et de la barre des tâches vers des programmes qui n\'existent plus.', load: async () => (await ps('shortcuts')).items.map(i => ({ path: i.path, label: baseName(i.path).replace(/\.lnk$/i, ''), sub: `${i.location} → ${i.target}`, checked: true })) },
     { id: 'empty', t: 'Dossiers vides', d: 'Dossiers vides posés directement dans Bureau, Documents, Téléchargements, Images, Vidéos ou Musique. Ceux qui sont plus profonds ne sont pas proposés : ils appartiennent souvent à un jeu ou un logiciel qui les attend.', action: 'dirs', load: async () => (await bao.call('scan.empty', {})).dirs.map(i => ({ path: i.path, label: baseName(i.path), sub: i.path, checked: false })) },
     { id: 'versions', t: 'Anciennes versions d\'applications', d: 'Discord, Teams, Slack, GitHub Desktop… gardent leurs anciennes versions après une mise à jour. Seule la plus récente sert.', load: async () => (await bao.call('ghosts.versions')).items.map(i => ({ path: i.path, label: `${i.app} — ${baseName(i.path)}`, sub: i.path, size: i.size, checked: true })) },
-    { id: 'downloads', t: 'Installateurs et archives oubliés', d: 'Fichiers .exe, .msi, .iso, .zip… de plus de 30 jours dans Téléchargements. Vérifiez avant : certains peuvent servir à réinstaller un logiciel.', load: async () => (await bao.call('ghosts.downloads')).items.map(i => ({ path: i.path, label: baseName(i.path), sub: `il y a ${i.age} jours`, size: i.size, checked: false })) },
+    { id: 'downloads', t: 'Installateurs et archives oubliés', d: 'Fichiers .exe, .msi, .iso, .zip… de plus de 30 jours dans Téléchargements. Vérifiez avant : certains peuvent servir à réinstaller un logiciel.', load: async () => (await bao.call('ghosts.downloads')).items.map(i => ({ path: i.path, label: baseName(i.path), sub: `il y a ${i.age} jours`, size: i.size, checked: false })), sizes: [[0, 'Toutes les tailles'], [10e6, 'Plus de 10 Mo'], [100e6, 'Plus de 100 Mo'], [1e9, 'Plus de 1 Go']] },
     { id: 'leftovers', t: 'Restes de programmes désinstallés', d: 'Dossiers dans Program Files, ProgramData et AppData qui ne correspondent à aucun programme installé et n\'ont pas servi depuis 60 jours. Détection par le nom : vérifiez chaque dossier avant (bouton Ouvrir).', warn: true, load: async () => {
       const items = (await ps('system', { action: 'leftovers' })).items;
       const sizes = items.length ? await bao.call('files.sizes', { paths: items.map(i => i.path) }) : [];
@@ -484,12 +505,23 @@ views.ghosts = async (v, live) => {
     const card = $(`#g-${s.id} .body`, box);
     if (!items.length) { card.innerHTML = '<div class="muted">Rien trouvé.</div>'; return; }
     s.items = items;
-    card.innerHTML = `${s.warn ? '<div class="note warn">À vérifier : ne cochez que les dossiers que vous reconnaissez comme inutiles.</div>' : ''}<div class="scroll-x"><table class="table"><tbody>${items.map((it, i) => `<tr><td style="width:28px"><input type="checkbox" data-s="${s.id}" data-i="${i}"${it.checked ? ' checked' : ''}></td><td class="path"><div class="ellipsis"><b>${esc(it.label)}</b></div><div class="small muted ellipsis" title="${esc(it.sub)}">${esc(it.sub)}</div></td><td class="r size">${it.size != null ? fmtSize(it.size) : ''}</td><td class="r"><button class="btn small" data-reveal="${esc(it.path)}">Ouvrir</button></td></tr>`).join('')}</tbody></table></div>
-      <div class="row end" style="margin-top:10px"><button class="btn danger small" data-go="${s.id}">${s.action === 'dirs' ? 'Supprimer les dossiers vides cochés' : 'Mettre les éléments cochés à la Corbeille'}</button></div>`;
+    // installateurs et archives : filtre par taille, les éléments masqués sont décochés
+    const min = s.sizes ? s.min || 0 : 0;
+    const shown = items.map((it, i) => [it, i]).filter(([it]) => (it.size || 0) >= min);
+    if (min) for (const it of items) if ((it.size || 0) < min) it.checked = false;
+    const filters = s.sizes ? `<div class="toolbar" style="margin-bottom:8px"><div class="chips">${s.sizes.map(([b, l]) => `<span class="chip${min === b ? ' on' : ''}" data-min="${b}" data-sec="${s.id}">${l}</span>`).join('')}</div><span class="muted small">${plural(shown.length, 'fichier', 'fichiers')} · ${fmtSize(shown.reduce((t, [it]) => t + (it.size || 0), 0))}</span></div>` : '';
+    card.innerHTML = `${s.warn ? '<div class="note warn">À vérifier : ne cochez que les dossiers que vous reconnaissez comme inutiles.</div>' : ''}${filters}${shown.length ? '' : '<div class="muted">Aucun fichier de cette taille.</div>'}<div class="scroll-x"><table class="table"><tbody>${shown.map(([it, i]) => `<tr><td style="width:28px"><input type="checkbox" data-s="${s.id}" data-i="${i}"${it.checked ? ' checked' : ''}></td><td class="path"><div class="ellipsis"><b>${esc(it.label)}</b></div><div class="small muted ellipsis" title="${esc(it.sub)}">${esc(it.sub)}</div></td><td class="r size">${it.size != null ? fmtSize(it.size) : ''}</td><td class="r"><button class="btn small" data-reveal="${esc(it.path)}">Ouvrir</button></td></tr>`).join('')}</tbody></table></div>
+      <div class="row end" style="margin-top:10px">${checkAll(`input[data-s="${s.id}"]`, `#g-${s.id}`)}<button class="btn danger small" data-go="${s.id}">${s.action === 'dirs' ? 'Supprimer les dossiers vides cochés' : 'Mettre les éléments cochés à la Corbeille'}</button></div>`;
   };
   for (const s of sections) s.load().then(items => live() && show(s, items)).catch(e => { if (live()) $(`#g-${s.id} .body`, box).innerHTML = `<div class="note warn">${esc(e.message)}</div>`; });
   v.addEventListener('click', async e => {
     const rv = e.target.closest('[data-reveal]'); if (rv) { bao.call('files.reveal', { path: rv.dataset.reveal }); return; }
+    const mn = e.target.closest('[data-min]');
+    if (mn) {
+      const s = sections.find(x => x.id === mn.dataset.sec);
+      for (const i of $$(`input[data-s="${s.id}"]`, box)) s.items[+i.dataset.i].checked = i.checked;
+      s.min = +mn.dataset.min; show(s, s.items); return;
+    }
     const go = e.target.closest('[data-go]');
     if (go) {
       const s = sections.find(x => x.id === go.dataset.go);
@@ -518,7 +550,7 @@ async function dupes(v) {
   r.groups.forEach(g => g.files.sort((a, b) => a.mtime - b.mtime));
   out.innerHTML = `<div class="note info" style="margin-top:10px">${plural(r.groups.length, 'groupe', 'groupes')} de fichiers identiques · ${fmtSize(waste)} occupés en double. La plus ancienne copie de chaque groupe est gardée ; les autres sont cochées.</div>
     ${r.groups.slice(0, 200).map((g, gi) => `<div style="margin:10px 0"><div class="small muted">${fmtSize(g.size)} × ${g.files.length}</div>${g.files.map((f, fi) => `<label class="row small" style="padding:3px 0"><input type="checkbox" data-g="${gi}" data-f="${fi}"${fi ? ' checked' : ''}><span class="grow ellipsis" title="${esc(f.path)}">${esc(f.path)}</span><span class="muted">${fmtDate(f.mtime)}</span></label>`).join('')}</div>`).join('')}
-    <div class="row end"><button class="btn danger small" id="dgo">Mettre les copies cochées à la Corbeille</button></div>`;
+    <div class="row end">${checkAll('input[data-g]', '#dupes-out')}<button class="btn danger small" id="dgo">Mettre les copies cochées à la Corbeille</button></div>`;
   $('#dgo', out).onclick = async () => {
     const picked = $$('input[data-g]:checked', out).map(i => r.groups[+i.dataset.g].files[+i.dataset.f].path);
     // jamais toutes les copies d'un même groupe
@@ -875,7 +907,7 @@ async function regScan(v) {
   if (!r.items.length) { out.innerHTML = '<div class="note ok" style="margin-top:10px">Aucune entrée orpheline.</div>'; return; }
   const cats = [...new Set(r.items.map(i => i.cat))];
   out.innerHTML = cats.map(c => `<h3 style="margin-top:14px">${esc(REG_CATS[c] || c)}</h3>${r.items.map((it, i) => it.cat === c ? `<label class="row small" style="padding:3px 0"><input type="checkbox" data-r="${i}" checked><span class="grow">${esc(it.detail)}<div class="muted mono break">${esc(it.key)}${it.value ? ' → ' + esc(it.value) : ''}</div></span></label>` : '').join('')}`).join('')
-    + '<div class="row end" style="margin-top:10px"><button class="btn primary" id="reg-fix">Retirer les entrées cochées</button></div>';
+    + `<div class="row end" style="margin-top:10px">${checkAll('input[data-r]', '#reg-out')}<button class="btn primary" id="reg-fix">Retirer les entrées cochées</button></div>`;
   $('#reg-fix', out).onclick = async () => {
     const items = $$('input[data-r]:checked', out).map(i => r.items[+i.dataset.r]);
     if (!items.length) return;
@@ -890,15 +922,15 @@ views.programs = async (v, live) => {
   const st = { tab: 'win32', q: '', sort: 'name', win32: null, store: null, features: null, allFeatures: false, showSys: false };
   v.innerHTML = `<h1>Applications</h1><p class="lead">Programmes installés, applications du Microsoft Store, applications préinstallées superflues et fonctionnalités facultatives de Windows.</p>${adminNote()}
     <div class="toolbar"><div class="chips"><span class="chip on" data-tab="win32">Programmes</span><span class="chip" data-tab="store">Microsoft Store</span><span class="chip" data-tab="bloat">Préinstallées</span><span class="chip" data-tab="features">Fonctionnalités de Windows</span></div>
-    <input class="field grow" id="q" placeholder="Filtrer…" style="max-width:240px"><span class="muted small" id="cnt"></span></div><div id="apps"></div>`;
+    <input class="field grow" id="q" placeholder="Filtrer…" style="max-width:240px">${sizeFilter("app-size")}<span class="muted small" id="cnt"></span></div><div id="apps"></div>`;
   const box = $('#apps', v);
-  const match = (...s) => !st.q || s.join(' ').toLowerCase().includes(st.q.toLowerCase());
+  const match = (...s) => filterMatch(st.q, ...s);
   const dateOf = d => /^\d{8}$/.test(d) ? `${d.slice(6, 8)}/${d.slice(4, 6)}/${d.slice(0, 4)}` : '';
   const spinner = () => { box.innerHTML = '<div class="spinner big"></div>'; };
   const loadStore = async () => { st.store = (await ps('apps', { elevated: state.elevated })).items || []; };
 
   const renderWin32 = () => {
-    const items = st.win32.filter(p => match(p.name, p.publisher));
+    const items = st.win32.filter(p => match(p.name, p.publisher) && (p.size || 0) >= +$('#app-size', v).value);
     const k = st.sort;
     items.sort((a, b) => k === 'size' ? b.size - a.size : k === 'date' ? String(b.date).localeCompare(String(a.date)) : String(a[k]).localeCompare(String(b[k])));
     box.innerHTML = `<div class="scroll-x"><table class="table"><thead><tr><th class="sort" data-s="name">Nom</th><th class="hide-s sort" data-s="publisher">Éditeur</th><th class="r sort" data-s="size">Taille</th><th class="r hide-s sort" data-s="date">Installé le</th><th></th></tr></thead><tbody>${items.map(p => `<tr><td><b>${esc(p.name)}</b><div class="small muted">${esc(p.version)}</div></td><td class="hide-s small muted">${esc(p.publisher)}</td><td class="r size">${p.size ? fmtSize(p.size) : ''}</td><td class="r hide-s small muted">${dateOf(p.date)}</td>
@@ -922,7 +954,7 @@ views.programs = async (v, live) => {
     const items = st.store.filter(a => appKb(a)?.bloat && !appLocked(a) && match(a.title, a.name)).sort((a, b) => a.title.localeCompare(b.title));
     box.innerHTML = `<div class="note info">Applications installées d'office par Windows ou le fabricant, que la plupart des gens n'utilisent pas. Celles qui n'ont aucune conséquence sont cochées. Elles sont retirées pour votre compte ; une grande mise à jour de Windows peut en réinstaller certaines.</div>
       ${items.length ? `<div class="list">${items.map(a => { const kb = appKb(a); return `<label class="item glass"><div class="ico"><input type="checkbox" data-b="${esc(a.full)}"${kb.r === 'ok' ? ' checked' : ''}></div><div><div class="title">${esc(a.title)} ${riskBadge(kb.r)}${a.running ? '<span class="badge plain">Ouverte</span>' : ''}</div><div class="what">${esc(kb.w)}</div><div class="cons"><b>Si désinstallée :</b> ${esc(kb.off)}</div></div></label>`; }).join('')}</div>
-      <div class="row end sticky" style="margin-top:10px"><button class="btn primary" id="bloat-go">Désinstaller la sélection</button></div>` : '<div class="note ok">Aucune application superflue connue n\'est installée.</div>'}`;
+      <div class="row end sticky" style="margin-top:10px">${checkAll('input[data-b]', '#apps')}<button class="btn primary" id="bloat-go">Désinstaller la sélection</button></div>` : '<div class="note ok">Aucune application superflue connue n\'est installée.</div>'}`;
     $('#cnt', v).textContent = plural(items.length, 'application', 'applications');
   };
 
@@ -938,6 +970,7 @@ views.programs = async (v, live) => {
   };
 
   const render = async () => {
+    $('#app-size', v).hidden = st.tab !== 'win32';
     const tab = st.tab;
     try {
       if (tab === 'win32') { if (!st.win32) { spinner(); st.win32 = (await ps('programs')).items || []; } }
@@ -1024,6 +1057,7 @@ views.programs = async (v, live) => {
     if (e.target.id === 'showsys') { st.showSys = e.target.checked; renderStore(); }
   });
   $('#q', v).oninput = e => { st.q = e.target.value; render(); };
+  $('#app-size', v).onchange = render;
   await render();
 };
 
@@ -1032,7 +1066,7 @@ views.sysinternals = async (v, live) => {
   const st = { q: '', have: {} };
   const all = SYSINT.flatMap(c => c.items);
   v.innerHTML = `<h1>Sysinternals</h1><p class="lead">Les ${all.length} outils de diagnostic avancé de Microsoft (Mark Russinovich). Chaque outil est téléchargé au premier lancement depuis le site officiel <span class="mono">live.sysinternals.com</span>, et n'est gardé et lancé que si sa signature Microsoft est valide.</p>${adminNote()}
-    <div class="toolbar"><input class="field grow" id="q" placeholder="Filtrer…" style="max-width:280px"><span class="muted small" id="cnt"></span><button class="btn small" id="si-folder">Dossier des outils</button><button class="btn small" id="si-update">Mettre à jour les outils téléchargés</button></div>
+    <div class="toolbar"><input class="field grow" id="q" placeholder="Filtrer…" style="max-width:280px">${filterSelect("si-kind", "Type d’outil", [["", "Tous les outils"], ["gui", "Fenêtre"], ["cli", "Ligne de commande"], ["downloaded", "Téléchargé"]])}<span class="muted small" id="cnt"></span><button class="btn small" id="si-folder">Dossier des outils</button><button class="btn small" id="si-update">Mettre à jour les outils téléchargés</button></div>
     <div id="si"></div>`;
   const box = $('#si', v);
   const here = { processes: 'Processus', startup: 'Démarrage', services: 'Services', large: 'Fichiers lourds' };
@@ -1040,7 +1074,7 @@ views.sysinternals = async (v, live) => {
     const q = st.q.toLowerCase();
     let n = 0;
     box.innerHTML = SYSINT.map(c => {
-      const items = c.items.filter(t => !q || (t.n + ' ' + t.w + ' ' + t.f).toLowerCase().includes(q));
+      const items = c.items.filter(t => filterMatch(q, t.n, t.w, t.f) && (!$('#si-kind', v).value || ($('#si-kind', v).value === 'gui' ? t.gui : $('#si-kind', v).value === 'cli' ? !t.gui : !!st.have[t.f])));
       n += items.length;
       return items.length ? `<h2>${esc(c.cat)}</h2><div class="list">${items.map(t => {
         const has = st.have[t.f];
@@ -1049,7 +1083,7 @@ views.sysinternals = async (v, live) => {
           ${t.gui ? '' : `<div class="row" style="margin-top:8px"><input class="field grow mono small" data-args value="${esc(t.args || '')}" placeholder="Arguments (facultatif)" spellcheck="false"></div>`}<div class="tool-out"></div></div>
           <div class="side"><button class="btn small primary" data-run>${has ? 'Lancer' : 'Télécharger et lancer'}</button><button class="btn small ghost" data-help title="Documentation officielle">?</button></div></div>`;
       }).join('')}</div>` : '';
-    }).join('') + (q ? '' : `<h2>Non repris</h2><div class="card glass">${SYSINT_ABSENT.map(([a, b]) => `<div style="margin-bottom:8px"><b>${esc(a)}</b><div class="muted small">${esc(b)}</div></div>`).join('')}</div>`);
+    }).join('') + (q || $('#si-kind', v).value ? '' : `<h2>Non repris</h2><div class="card glass">${SYSINT_ABSENT.map(([a, b]) => `<div style="margin-bottom:8px"><b>${esc(a)}</b><div class="muted small">${esc(b)}</div></div>`).join('')}</div>`);
     $('#cnt', v).textContent = plural(n, 'outil', 'outils');
   };
   const run = async (t, item) => {
@@ -1096,6 +1130,7 @@ views.sysinternals = async (v, live) => {
   });
   v.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-args]')) { const item = e.target.closest('[data-si]'); run(all.find(x => x.id === item.dataset.si), item); } });
   $('#q', v).oninput = e => { st.q = e.target.value; render(); };
+  $('#si-kind', v).onchange = render;
   st.have = await bao.call('sysint.state').catch(() => ({}));
   if (!live()) return;
   render();
@@ -1107,9 +1142,16 @@ views.history = async (v, live) => {
   if (!live()) return;
   list.reverse();
   v.innerHTML = `<h1>Historique</h1><p class="lead">Toutes les modifications faites avec la Boîte à outils. Celles qui ont un bouton « Annuler » reviennent exactement à l'état d'avant. Les fichiers mis à la Corbeille se récupèrent depuis la Corbeille.</p>
-    <div class="toolbar"><button class="btn" id="backups">Ouvrir le dossier des sauvegardes</button></div>
-    <div class="list">${list.length ? list.map(e => `<div class="item glass${e.undone ? ' off' : ''}"><div class="ico">${e.undone ? '↺' : '✓'}</div><div><div class="title">${esc(e.title)} ${e.undone ? '<span class="badge plain">Annulée</span>' : ''}</div><div class="sub">${fmtDateTime(e.time)}</div>${e.detail ? `<div class="small muted break">${esc(e.detail)}</div>` : ''}</div>
-      <div class="side">${e.undo_script && !e.undone ? `<button class="btn small" data-undo="${e.id}">Annuler</button>` : ''}</div></div>`).join('') : '<div class="empty">Aucune modification pour l\'instant.</div>'}</div>`;
+    <div class="toolbar"><input class="field grow" id="history-q" placeholder="Filtrer…">${filterSelect("history-state", "État", [["", "Tous les états"], ["undo", "Annulables"], ["undone", "Annulées"]])}<button class="btn" id="backups">Ouvrir le dossier des sauvegardes</button></div>
+    <div class="list" id="history-list"></div>`;
+  const render = () => {
+    const shown = list.filter(e => filterMatch($('#history-q', v).value, e.title, e.detail) && (!$('#history-state', v).value || ($('#history-state', v).value === 'undo' ? e.undo_script && !e.undone : e.undone)));
+    $('#history-list', v).innerHTML = `${shown.length ? shown.map(e => `<div class="item glass${e.undone ? ' off' : ''}"><div class="ico">${e.undone ? '↺' : '✓'}</div><div><div class="title">${esc(e.title)} ${e.undone ? '<span class="badge plain">Annulée</span>' : ''}</div><div class="sub">${fmtDateTime(e.time)}</div>${e.detail ? `<div class="small muted break">${esc(e.detail)}</div>` : ''}</div>
+      <div class="side">${e.undo_script && !e.undone ? `<button class="btn small" data-undo="${e.id}">Annuler</button>` : ''}</div></div>`).join('') : '<div class="empty">Aucune modification pour l\'instant.</div>'}`;
+  };
+  $('#history-q', v).oninput = render;
+  $('#history-state', v).onchange = render;
+  render();
   v.addEventListener('click', async e => {
     if (e.target.closest('#backups')) { bao.call('files.reveal', { path: state.dataDir + '\\sauvegardes' }); return; }
     const b = e.target.closest('[data-undo]'); if (!b) return;
@@ -1119,12 +1161,56 @@ views.history = async (v, live) => {
   });
 };
 
+// Index local en mémoire, reconstruit à la demande. Aucun contenu de fichier n'est lu.
+const fileSearch = { root: '', q: '', kind: '', min: 0, since: 0, sort: 'name', fullPath: false, hidden: false };
+views.search = async (v, live) => {
+  const info = state.info || await bao.call('info');
+  if (!live()) return;
+  const status = await bao.call('search.status');
+  if (!live()) return;
+  fileSearch.root = status.root || fileSearch.root || info.home || info.drives?.[0]?.drive || 'C:\\';
+  v.innerHTML = `<h1>Recherche de fichiers</h1><p class="lead">Retrouvez fichiers et dossiers par leur nom, comme avec Everything.</p>
+    <div class="card glass"><div class="toolbar"><input class="field grow" id="fs-root" aria-label="Dossier à indexer" value="${esc(fileSearch.root)}"><select class="field" id="fs-volume" aria-label="Emplacement"><option value="">Choisir un emplacement</option><option value="*">Tout l'ordinateur</option><option value="${esc(info.home || '')}">Dossier personnel</option>${(info.drives || []).map(d => `<option value="${esc(d.drive + (d.drive.endsWith('\\') ? '' : '\\'))}">${esc(d.drive)}</option>`).join('')}</select><button class="btn primary" id="fs-build">Reconstruire l'index</button><button class="btn" id="fs-stop">Arrêter</button></div>
+    <label class="row small"><input type="checkbox" id="fs-hidden"${fileSearch.hidden ? ' checked' : ''}> Inclure les éléments masqués</label><div class="muted small" id="fs-status" role="status"></div>
+    <p class="muted small">L'index reste en mémoire sur cet appareil. Reconstruisez-le après des modifications.</p><p class="muted small">La première indexation peut prendre plusieurs minutes. Les dossiers inaccessibles sont ignorés ; les liens ne sont pas parcourus. Les tailles des dossiers ne sont pas calculées.</p></div>
+    <div class="toolbar"><input class="field grow" id="fs-query" placeholder="Nom, plusieurs mots ou *.pdf" value="${esc(fileSearch.q)}">${filterSelect('fs-kind', 'Type', [['', 'Fichiers et dossiers'], ['files', 'Fichiers'], ['folders', 'Dossiers']])}${sizeFilter('fs-min')}${filterSelect('fs-date', 'Date de modification', [[0, 'Toutes les dates'], [1, 'Dernières 24 heures'], [7, '7 derniers jours'], [30, '30 derniers jours']])}${filterSelect('fs-sort', 'Trier', [['name', 'Nom'], ['size', 'Taille'], ['date', 'Date de modification']])}</div>
+    <label class="row small muted"><input type="checkbox" id="fs-path"${fileSearch.fullPath ? ' checked' : ''}> Chercher dans le chemin complet</label><div id="fs-count" class="muted small" role="status"></div><div id="fs-results"></div>`;
+  for (const [id, key] of [['fs-kind','kind'],['fs-min','min'],['fs-date','since'],['fs-sort','sort']]) $('#'+id,v).value = fileSearch[key];
+  let serial = 0, pending = false, timer;
+  const render = async () => {
+    const seq = ++serial;
+    const r = await bao.call('search.query', { ...fileSearch, since: fileSearch.since ? Math.floor(Date.now()/1000) - fileSearch.since*86400 : 0, limit: 500 });
+    if (!live() || seq !== serial) return;
+    $('#fs-build',v).disabled = r.running; $('#fs-stop',v).disabled = !r.running;
+    $('#fs-status',v).textContent = trad('{0} éléments indexés · {1} dossiers inaccessibles', { 0:r.indexed, 1:r.skipped }) + ' · ' + trad(r.running ? 'Indexation en cours…' : r.cancelled ? 'Indexation arrêtée (résultats partiels)' : 'Index prêt');
+    $('#fs-count',v).textContent = trad('{0} résultats · {1} affichés', { 0:r.total, 1:r.items.length });
+    $('#fs-results',v).innerHTML = r.items.length ? `<div class="scroll-x"><table class="table"><thead><tr><th>Nom</th><th>Chemin</th><th class="r">Taille</th><th>Date de modification</th><th></th></tr></thead><tbody>${r.items.map(it => `<tr><td style="min-width:160px">${it.dir ? '📁' : '📄'} ${esc(it.name)}</td><td class="path small"><span title="${esc(it.path)}">${esc(it.path)}</span></td><td class="r size">${it.dir ? '—' : fmtSize(it.size)}</td><td class="small">${it.modified ? fmtDateTime(it.modified) : '—'}</td><td><button class="btn small" data-fs-reveal="${esc(it.path)}">Afficher</button><button class="btn small" data-fs-copy="${esc(it.path)}">Copier le chemin</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Aucun résultat. Lancez une indexation ou ajustez les filtres.</div>';
+  };
+  const refresh = () => { if (pending || !live()) return; pending = true; render().catch(e => live() && toast(e.message)).finally(() => pending = false); };
+  $('#fs-query',v).oninput = e => { fileSearch.q=e.target.value;clearTimeout(timer);timer=setTimeout(refresh,180); };
+  for (const [id,key,numeric] of [['fs-kind','kind',false],['fs-min','min',true],['fs-date','since',true],['fs-sort','sort',false]]) $('#'+id,v).onchange=e=>{fileSearch[key]=numeric?+e.target.value:e.target.value;refresh();};
+  $('#fs-path',v).onchange=e=>{fileSearch.fullPath=e.target.checked;refresh();};
+  $('#fs-volume',v).onchange=e=>{if(e.target.value)$('#fs-root',v).value=e.target.value;};
+  $('#fs-build',v).onclick=async()=>{
+    fileSearch.root=$('#fs-root',v).value.trim();fileSearch.hidden=$('#fs-hidden',v).checked;
+    try { await bao.call('search.start',{root:fileSearch.root,hidden:fileSearch.hidden});refresh(); } catch(e) { if(live())toast(e.message); }
+  };
+  $('#fs-stop',v).onclick=async()=>{await bao.call('search.stop');refresh();};
+  v.addEventListener('click',e=>{
+    const reveal=e.target.closest('[data-fs-reveal]');if(reveal)bao.call('files.reveal',{path:reveal.dataset.fsReveal});
+    const copy=e.target.closest('[data-fs-copy]');if(copy)copyText(copy.dataset.fsCopy);
+  });
+  const interval=setInterval(refresh,1500);
+  router.cleanup.push(()=>{clearInterval(interval);clearTimeout(timer);serial++;});
+  await render();
+};
+
 // ── démarrage ────────────────────────────────────────────────────────────
 async function boot() {
   $('#nav').addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) router.go(a.dataset.view); });
   $('#menu-btn').onclick = () => document.body.classList.toggle('drawer');
   $('#scrim').onclick = () => document.body.classList.remove('drawer');
-  native({ cmd: 'ready' });
+  native({ cmd: 'ready', lang: LANG });
   try { state.info = await bao.call('info'); } catch { state.info = null; }
   state.elevated = !!state.info?.elevated;
   state.dataDir = state.info?.dataDir || '';

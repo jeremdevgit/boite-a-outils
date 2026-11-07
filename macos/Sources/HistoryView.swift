@@ -36,20 +36,20 @@ struct HistoryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Historique", subtitle: "Tout ce que la Boîte à outils a supprimé ou mis à la corbeille",
+            PageHeader(title: String(localized: "Historique"), subtitle: String(localized: "Tout ce que la Boîte à outils a supprimé ou mis à la corbeille"),
                        icon: "clock.arrow.circlepath", color: .secondary) {
                 TextField("Filtrer", text: $model.filter).textFieldStyle(.roundedBorder).frame(width: 200)
                 Button("Ouvrir la corbeille") { NSWorkspace.shared.open(FS.home.appendingPathComponent(".Trash")) }
             }
             if model.entries.isEmpty {
-                EmptyState(icon: "clock", title: "Historique vide", message: "Les suppressions effectuées apparaîtront ici.")
+                EmptyState(icon: "clock", title: String(localized: "Historique vide"), message: String(localized: "Les suppressions effectuées apparaîtront ici."))
             } else {
                 List(model.visible) { e in
                     HStack(spacing: 10) {
                         Image(systemName: e.action == "Corbeille" ? "trash" : "xmark.circle")
                             .foregroundStyle(e.action == "Corbeille" ? Color.orange : Color.red).frame(width: 18)
                         Text(e.date).font(.caption.monospacedDigit()).foregroundStyle(.secondary).frame(width: 130, alignment: .leading)
-                        Text(e.action).font(.caption).frame(width: 70, alignment: .leading)
+                        Text(LocalizedStringKey(e.action)).font(.caption).frame(width: 70, alignment: .leading)
                         Text(e.path.replacingOccurrences(of: FS.home.path, with: "~", options: .anchored))
                             .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
                     }

@@ -14,17 +14,21 @@ fi
 echo "→ Compilation"
 mkdir -p build
 # Les deux architectures en parallèle ; -file-prefix-map retire le chemin local des sources du binaire.
+pids=()
 for arch in arm64 x86_64; do
   swiftc -O -swift-version 5 -parse-as-library -target $arch-apple-macos14 \
-    -file-prefix-map "$PWD=." Sources/*.swift -o build/$BIN-$arch &
+    -module-cache-path "$PWD/build/ModuleCache" -file-prefix-map "$PWD=." Sources/*.swift -o build/$BIN-$arch &
+  pids+=($!)
 done
-wait
+for pid in $pids; do wait "$pid" || exit 1; done
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 lipo -create build/$BIN-arm64 build/$BIN-x86_64 -output "$APP/Contents/MacOS/$BIN"
 cp Resources/Info.plist "$APP/Contents/"
 cp Resources/AppIcon.icns Resources/Licences.txt "$APP/Contents/Resources/"
+# Traductions : un dossier .lproj par langue (le texte français sert de clé ; anglais en repli).
+cp -R Resources/*.lproj "$APP/Contents/Resources/"
 xattr -cr "$APP"
 # Certificat local stable : les autorisations macOS restent valides d'une version à l'autre.
 IDENTITY="Boite a outils (local)"

@@ -15,36 +15,36 @@ struct Tweak: Identifiable {
     var enabled = false
 
     static let all: [Tweak] = [
-        Tweak(section: "Finder", title: "Afficher les fichiers cachés", domain: "com.apple.finder", key: "AppleShowAllFiles", type: "bool", on: "true", off: nil, restart: "Finder"),
-        Tweak(section: "Finder", title: "Afficher toutes les extensions de fichiers", domain: "NSGlobalDomain", key: "AppleShowAllExtensions", type: "bool", on: "true", off: nil, restart: "Finder"),
-        Tweak(section: "Finder", title: "Afficher la barre du chemin", domain: "com.apple.finder", key: "ShowPathbar", type: "bool", on: "true", off: nil, restart: "Finder"),
-        Tweak(section: "Finder", title: "Afficher la barre d'état", domain: "com.apple.finder", key: "ShowStatusBar", type: "bool", on: "true", off: nil, restart: "Finder"),
-        Tweak(section: "Finder", title: "Chemin complet dans le titre des fenêtres", domain: "com.apple.finder", key: "_FXShowPosixPathInTitle", type: "bool", on: "true", off: nil, restart: "Finder"),
-        Tweak(section: "Finder", title: "Dossiers en premier lors du tri", domain: "com.apple.finder", key: "_FXSortFoldersFirst", type: "bool", on: "true", off: nil, restart: "Finder"),
-        Tweak(section: "Finder", title: "Pas d'alerte en changeant une extension", domain: "com.apple.finder", key: "FXEnableExtensionChangeWarning", type: "bool", on: "false", off: nil, restart: "Finder"),
-        Tweak(section: "Finder", title: "Pas de fichiers .DS_Store sur les disques réseau", domain: "com.apple.desktopservices", key: "DSDontWriteNetworkStores", type: "bool", on: "true", off: nil, restart: "Finder"),
-        Tweak(section: "Finder", title: "Pas de fichiers .DS_Store sur les clés USB", domain: "com.apple.desktopservices", key: "DSDontWriteUSBStores", type: "bool", on: "true", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Afficher les fichiers cachés"), domain: "com.apple.finder", key: "AppleShowAllFiles", type: "bool", on: "true", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Afficher toutes les extensions de fichiers"), domain: "NSGlobalDomain", key: "AppleShowAllExtensions", type: "bool", on: "true", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Afficher la barre du chemin"), domain: "com.apple.finder", key: "ShowPathbar", type: "bool", on: "true", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Afficher la barre d'état"), domain: "com.apple.finder", key: "ShowStatusBar", type: "bool", on: "true", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Chemin complet dans le titre des fenêtres"), domain: "com.apple.finder", key: "_FXShowPosixPathInTitle", type: "bool", on: "true", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Dossiers en premier lors du tri"), domain: "com.apple.finder", key: "_FXSortFoldersFirst", type: "bool", on: "true", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Pas d'alerte en changeant une extension"), domain: "com.apple.finder", key: "FXEnableExtensionChangeWarning", type: "bool", on: "false", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Pas de fichiers .DS_Store sur les disques réseau"), domain: "com.apple.desktopservices", key: "DSDontWriteNetworkStores", type: "bool", on: "true", off: nil, restart: "Finder"),
+        Tweak(section: "Finder", title: String(localized: "Pas de fichiers .DS_Store sur les clés USB"), domain: "com.apple.desktopservices", key: "DSDontWriteUSBStores", type: "bool", on: "true", off: nil, restart: "Finder"),
 
-        Tweak(section: "Dock", title: "Masquer automatiquement le Dock", domain: "com.apple.dock", key: "autohide", type: "bool", on: "true", off: nil, restart: "Dock"),
-        Tweak(section: "Dock", title: "Apparition instantanée (sans délai)", domain: "com.apple.dock", key: "autohide-delay", type: "float", on: "0", off: nil, restart: "Dock"),
-        Tweak(section: "Dock", title: "Animation d'apparition rapide", domain: "com.apple.dock", key: "autohide-time-modifier", type: "float", on: "0.15", off: nil, restart: "Dock"),
-        Tweak(section: "Dock", title: "Icônes translucides pour les apps masquées", domain: "com.apple.dock", key: "showhidden", type: "bool", on: "true", off: nil, restart: "Dock"),
-        Tweak(section: "Dock", title: "Ne pas afficher les apps récentes", domain: "com.apple.dock", key: "show-recents", type: "bool", on: "false", off: nil, restart: "Dock"),
-        Tweak(section: "Dock", title: "Réduire les fenêtres dans l'icône de l'app", domain: "com.apple.dock", key: "minimize-to-application", type: "bool", on: "true", off: nil, restart: "Dock"),
-        Tweak(section: "Dock", title: "N'afficher que les apps ouvertes", domain: "com.apple.dock", key: "static-only", type: "bool", on: "true", off: nil, restart: "Dock"),
-        Tweak(section: "Dock", title: "Ne pas réorganiser les Spaces automatiquement", domain: "com.apple.dock", key: "mru-spaces", type: "bool", on: "false", off: nil, restart: "Dock"),
+        Tweak(section: "Dock", title: String(localized: "Masquer automatiquement le Dock"), domain: "com.apple.dock", key: "autohide", type: "bool", on: "true", off: nil, restart: "Dock"),
+        Tweak(section: "Dock", title: String(localized: "Apparition instantanée (sans délai)"), domain: "com.apple.dock", key: "autohide-delay", type: "float", on: "0", off: nil, restart: "Dock"),
+        Tweak(section: "Dock", title: String(localized: "Animation d'apparition rapide"), domain: "com.apple.dock", key: "autohide-time-modifier", type: "float", on: "0.15", off: nil, restart: "Dock"),
+        Tweak(section: "Dock", title: String(localized: "Icônes translucides pour les apps masquées"), domain: "com.apple.dock", key: "showhidden", type: "bool", on: "true", off: nil, restart: "Dock"),
+        Tweak(section: "Dock", title: String(localized: "Ne pas afficher les apps récentes"), domain: "com.apple.dock", key: "show-recents", type: "bool", on: "false", off: nil, restart: "Dock"),
+        Tweak(section: "Dock", title: String(localized: "Réduire les fenêtres dans l'icône de l'app"), domain: "com.apple.dock", key: "minimize-to-application", type: "bool", on: "true", off: nil, restart: "Dock"),
+        Tweak(section: "Dock", title: String(localized: "N'afficher que les apps ouvertes"), domain: "com.apple.dock", key: "static-only", type: "bool", on: "true", off: nil, restart: "Dock"),
+        Tweak(section: "Dock", title: String(localized: "Ne pas réorganiser les Spaces automatiquement"), domain: "com.apple.dock", key: "mru-spaces", type: "bool", on: "false", off: nil, restart: "Dock"),
 
-        Tweak(section: "Captures d'écran", title: "Supprimer l'ombre des fenêtres capturées", domain: "com.apple.screencapture", key: "disable-shadow", type: "bool", on: "true", off: nil, restart: "SystemUIServer"),
-        Tweak(section: "Captures d'écran", title: "Enregistrer en JPEG (plus léger que PNG)", domain: "com.apple.screencapture", key: "type", type: "string", on: "jpg", off: nil, restart: "SystemUIServer"),
-        Tweak(section: "Captures d'écran", title: "Ne pas afficher la vignette flottante", domain: "com.apple.screencapture", key: "show-thumbnail", type: "bool", on: "false", off: nil, restart: "SystemUIServer"),
+        Tweak(section: String(localized: "Captures d'écran"), title: String(localized: "Supprimer l'ombre des fenêtres capturées"), domain: "com.apple.screencapture", key: "disable-shadow", type: "bool", on: "true", off: nil, restart: "SystemUIServer"),
+        Tweak(section: String(localized: "Captures d'écran"), title: String(localized: "Enregistrer en JPEG (plus léger que PNG)"), domain: "com.apple.screencapture", key: "type", type: "string", on: "jpg", off: nil, restart: "SystemUIServer"),
+        Tweak(section: String(localized: "Captures d'écran"), title: String(localized: "Ne pas afficher la vignette flottante"), domain: "com.apple.screencapture", key: "show-thumbnail", type: "bool", on: "false", off: nil, restart: "SystemUIServer"),
 
-        Tweak(section: "Système", title: "Fenêtres d'enregistrement développées par défaut", domain: "NSGlobalDomain", key: "NSNavPanelExpandedStateForSaveMode", type: "bool", on: "true", off: nil, restart: nil),
-        Tweak(section: "Système", title: "Fenêtres d'impression développées par défaut", domain: "NSGlobalDomain", key: "PMPrintingExpandedStateForPrint", type: "bool", on: "true", off: nil, restart: nil),
-        Tweak(section: "Système", title: "Enregistrer sur le Mac plutôt que dans iCloud", domain: "NSGlobalDomain", key: "NSDocumentSaveNewDocumentsToCloud", type: "bool", on: "false", off: nil, restart: nil),
-        Tweak(section: "Système", title: "Désactiver la correction orthographique automatique", domain: "NSGlobalDomain", key: "NSAutomaticSpellingCorrectionEnabled", type: "bool", on: "false", off: nil, restart: nil),
-        Tweak(section: "Système", title: "Désactiver les animations d'ouverture de fenêtres", domain: "NSGlobalDomain", key: "NSAutomaticWindowAnimationsEnabled", type: "bool", on: "false", off: nil, restart: nil),
-        Tweak(section: "Système", title: "TextEdit : nouveaux documents en texte brut", domain: "com.apple.TextEdit", key: "RichText", type: "bool", on: "false", off: nil, restart: nil),
-        Tweak(section: "Système", title: "Time Machine : ne pas proposer les nouveaux disques", domain: "com.apple.TimeMachine", key: "DoNotOfferNewDisksForBackup", type: "bool", on: "true", off: nil, restart: nil),
+        Tweak(section: String(localized: "Système"), title: String(localized: "Fenêtres d'enregistrement développées par défaut"), domain: "NSGlobalDomain", key: "NSNavPanelExpandedStateForSaveMode", type: "bool", on: "true", off: nil, restart: nil),
+        Tweak(section: String(localized: "Système"), title: String(localized: "Fenêtres d'impression développées par défaut"), domain: "NSGlobalDomain", key: "PMPrintingExpandedStateForPrint", type: "bool", on: "true", off: nil, restart: nil),
+        Tweak(section: String(localized: "Système"), title: String(localized: "Enregistrer sur le Mac plutôt que dans iCloud"), domain: "NSGlobalDomain", key: "NSDocumentSaveNewDocumentsToCloud", type: "bool", on: "false", off: nil, restart: nil),
+        Tweak(section: String(localized: "Système"), title: String(localized: "Désactiver la correction orthographique automatique"), domain: "NSGlobalDomain", key: "NSAutomaticSpellingCorrectionEnabled", type: "bool", on: "false", off: nil, restart: nil),
+        Tweak(section: String(localized: "Système"), title: String(localized: "Désactiver les animations d'ouverture de fenêtres"), domain: "NSGlobalDomain", key: "NSAutomaticWindowAnimationsEnabled", type: "bool", on: "false", off: nil, restart: nil),
+        Tweak(section: String(localized: "Système"), title: String(localized: "TextEdit : nouveaux documents en texte brut"), domain: "com.apple.TextEdit", key: "RichText", type: "bool", on: "false", off: nil, restart: nil),
+        Tweak(section: String(localized: "Système"), title: String(localized: "Time Machine : ne pas proposer les nouveaux disques"), domain: "com.apple.TimeMachine", key: "DoNotOfferNewDisksForBackup", type: "bool", on: "true", off: nil, restart: nil),
     ]
 
     func readEnabled() -> Bool {
@@ -80,18 +80,18 @@ struct HiddenUtility: Identifiable {
     static var available: [HiddenUtility] {
         let core = "/System/Library/CoreServices/Applications/", utils = "/System/Applications/Utilities/"
         let candidates: [(String, [String])] = [
-            ("Diagnostic sans fil", [core + "Wireless Diagnostics.app"]),
-            ("Utilitaire d'annuaire", [core + "Directory Utility.app"]),
-            ("Partage d'écran", [core + "Screen Sharing.app", utils + "Screen Sharing.app"]),
-            ("Visualiseur de tickets", [core + "Ticket Viewer.app"]),
-            ("Utilitaire d'archive", [core + "Archive Utility.app"]),
-            ("Assistant d'évaluation", [core + "Feedback Assistant.app", "/System/Library/CoreServices/Applications/Feedback Assistant.app"]),
-            ("Trousseaux d'accès", [core + "Keychain Access.app", utils + "Keychain Access.app"]),
-            ("Informations système", [utils + "System Information.app"]),
+            (String(localized: "Diagnostic sans fil"), [core + "Wireless Diagnostics.app"]),
+            (String(localized: "Utilitaire d'annuaire"), [core + "Directory Utility.app"]),
+            (String(localized: "Partage d'écran"), [core + "Screen Sharing.app", utils + "Screen Sharing.app"]),
+            (String(localized: "Visualiseur de tickets"), [core + "Ticket Viewer.app"]),
+            (String(localized: "Utilitaire d'archive"), [core + "Archive Utility.app"]),
+            (String(localized: "Assistant d'évaluation"), [core + "Feedback Assistant.app", "/System/Library/CoreServices/Applications/Feedback Assistant.app"]),
+            (String(localized: "Trousseaux d'accès"), [core + "Keychain Access.app", utils + "Keychain Access.app"]),
+            (String(localized: "Informations système"), [utils + "System Information.app"]),
             ("Console", [utils + "Console.app"]),
-            ("Utilitaire de disque", [utils + "Disk Utility.app"]),
-            ("Utilitaire ColorSync", [utils + "ColorSync Utility.app"]),
-            ("Moniteur d'activité", [utils + "Activity Monitor.app"]),
+            (String(localized: "Utilitaire de disque"), [utils + "Disk Utility.app"]),
+            (String(localized: "Utilitaire ColorSync"), [utils + "ColorSync Utility.app"]),
+            (String(localized: "Moniteur d'activité"), [utils + "Activity Monitor.app"]),
         ]
         return candidates.compactMap { name, paths in
             paths.first { FileManager.default.fileExists(atPath: $0) }.map { HiddenUtility(name: name, url: URL(fileURLWithPath: $0)) }
@@ -148,13 +148,14 @@ struct TweaksView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Réglages cachés", subtitle: "Options avancées de macOS, sans Terminal",
+            PageHeader(title: String(localized: "Réglages cachés"), subtitle: String(localized: "Options avancées de macOS, sans Terminal"),
                        icon: "slider.horizontal.3", color: .yellow) {
                 Button("Tout rétablir par défaut…") { confirmReset = true }
             }
             Form {
                 Section("Boîte à outils") {
                     Toggle("Moniteur système dans la barre des menus", isOn: $menuBarMonitor)
+                    LanguePicker()
                 }
                 ForEach(model.sections, id: \.self) { s in
                     Section(s) {
@@ -162,7 +163,7 @@ struct TweaksView: View {
                             Toggle(t.title, isOn: Binding(get: { t.enabled }, set: { model.set(t, $0) }))
                                 .help("defaults write \(t.domain) \(t.key) -\(t.type) \(t.on)")
                         }
-                        if s == "Captures d'écran" {
+                        if s == String(localized: "Captures d'écran") {
                             HStack {
                                 Text("Dossier des captures : \(model.screenshotFolder)")
                                 Spacer()

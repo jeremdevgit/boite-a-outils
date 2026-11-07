@@ -40,13 +40,13 @@ final class UtilitiesModel: ObservableObject {
     func recognize(_ url: URL) {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
-        request.recognitionLanguages = ["fr-FR", "en-US"]
+        request.recognitionLanguages = [Langue.actuelle == "zh-Hans" ? "zh-Hans" : Langue.bcp47, "en-US", "fr-FR"].reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
         request.usesLanguageCorrection = true
         try? VNImageRequestHandler(url: url).perform([request])
         let text = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
         DispatchQueue.main.async {
             self.ocrBusy = false
-            self.ocrText = text.isEmpty ? "(aucun texte reconnu)" : text
+            self.ocrText = text.isEmpty ? String(localized: "(aucun texte reconnu)") : text
             if !text.isEmpty {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(text, forType: .string)
@@ -80,7 +80,7 @@ final class UtilitiesModel: ObservableObject {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = true
-        panel.prompt = "Compresser"
+        panel.prompt = String(localized: "Compresser")
         guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
         compress(panel.urls, format, password: password, reveal: true)
     }
@@ -88,9 +88,9 @@ final class UtilitiesModel: ObservableObject {
     func compress(_ urls: [URL], _ format: ArchiveFormat, password: String, reveal: Bool) {
         guard let first = urls.first else { return }
         let dir = first.deletingLastPathComponent()
-        let base = urls.count == 1 ? first.deletingPathExtension().lastPathComponent : "Archive"
+        let base = urls.count == 1 ? first.deletingPathExtension().lastPathComponent : String(localized: "Archive")
         archiveBusy = true
-        archiveMessage = "Compression…"
+        archiveMessage = String(localized: "Compression…")
         DispatchQueue.global(qos: .userInitiated).async {
             let names = urls.map(\.lastPathComponent)
             let out: URL
@@ -138,11 +138,11 @@ final class UtilitiesModel: ObservableObject {
             DispatchQueue.main.async {
                 self.archiveBusy = false
                 if r.ok && FS.exists(out) {
-                    self.archiveMessage = "Créé : \(out.lastPathComponent) (\(formatBytes(FS.size(of: out))))"
+                    self.archiveMessage = String(localized: "Créé : \(out.lastPathComponent) (\(formatBytes(FS.size(of: out))))")
                     self.lastArchive = out
                     if reveal { FS.reveal([out]) }
                 } else {
-                    self.archiveMessage = "Échec : \(r.output)"
+                    self.archiveMessage = String(localized: "Échec : \(r.output)")
                 }
             }
         }
@@ -152,14 +152,14 @@ final class UtilitiesModel: ObservableObject {
     func extract() {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
-        panel.prompt = "Décompresser"
+        panel.prompt = String(localized: "Décompresser")
         guard panel.runModal() == .OK else { return }
         extract(panel.urls, reveal: true)
     }
 
     func extract(_ files: [URL], reveal: Bool) {
         archiveBusy = true
-        archiveMessage = "Décompression…"
+        archiveMessage = String(localized: "Décompression…")
         DispatchQueue.global(qos: .userInitiated).async {
             var done: [URL] = [], errors: [String] = []
             for f in files {
@@ -175,7 +175,7 @@ final class UtilitiesModel: ObservableObject {
             }
             DispatchQueue.main.async {
                 self.archiveBusy = false
-                self.archiveMessage = errors.isEmpty ? "\(done.count) archive(s) décompressée(s)." : errors.joined(separator: "\n")
+                self.archiveMessage = errors.isEmpty ? String(localized: "\(done.count) archive(s) décompressée(s).") : errors.joined(separator: "\n")
                 self.lastExtracted = done
                 if reveal && !done.isEmpty { FS.reveal(done) }
             }
@@ -202,14 +202,14 @@ final class UtilitiesModel: ObservableObject {
     }
 
     func hash(_ u: URL) {
-        hashes = [("Fichier", u.lastPathComponent), ("Calcul…", "")]
+        hashes = [(String(localized: "Fichier"), u.lastPathComponent), (String(localized: "Calcul…"), "")]
         DispatchQueue.global(qos: .userInitiated).async {
             guard let h = FileHandle(forReadingAtPath: u.path) else { return }
             var s256 = SHA256(), s1 = Insecure.SHA1(), m5 = Insecure.MD5()
             while let d = try? h.read(upToCount: 4 << 20), !d.isEmpty { s256.update(data: d); s1.update(data: d); m5.update(data: d) }
             try? h.close()
             func hex<D: Digest>(_ d: D) -> String { d.map { String(format: "%02x", $0) }.joined() }
-            let res = [("Fichier", u.lastPathComponent), ("SHA-256", hex(s256.finalize())), ("SHA-1", hex(s1.finalize())), ("MD5", hex(m5.finalize()))]
+            let res = [(String(localized: "Fichier"), u.lastPathComponent), ("SHA-256", hex(s256.finalize())), ("SHA-1", hex(s1.finalize())), ("MD5", hex(m5.finalize()))]
             DispatchQueue.main.async { self.hashes = res }
         }
     }
@@ -223,10 +223,10 @@ struct UtilitiesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageHeader(title: "Utilitaires", subtitle: "Texte depuis l'écran, pipette, archives, empreintes",
+                PageHeader(title: String(localized: "Utilitaires"), subtitle: String(localized: "Texte depuis l'écran, pipette, archives, empreintes"),
                            icon: "hammer.fill", color: .brown)
                 Group {
-                    Card(title: "Copier le texte d'une zone de l'écran (OCR)", icon: "text.viewfinder") {
+                    Card(title: String(localized: "Copier le texte d'une zone de l'écran (OCR)"), icon: "text.viewfinder") {
                         HStack {
                             Button("Sélectionner une zone…") { model.captureAndRecognize() }.buttonStyle(.borderedProminent)
                             Button("Depuis une image ou un PDF…") { model.recognizeFile() }
@@ -241,7 +241,7 @@ struct UtilitiesView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
 
-                    Card(title: "Pipette", icon: "eyedropper") {
+                    Card(title: String(localized: "Pipette"), icon: "eyedropper") {
                         HStack(spacing: 14) {
                             Button("Choisir une couleur à l'écran") { model.pickColor() }
                             if let c = model.color {
@@ -255,7 +255,7 @@ struct UtilitiesView: View {
                         }
                     }
 
-                    Card(title: "Archives", icon: "archivebox.fill") {
+                    Card(title: String(localized: "Archives"), icon: "archivebox.fill") {
                         HStack {
                             Picker("Format", selection: $format) {
                                 ForEach(UtilitiesModel.ArchiveFormat.allCases) { Text($0.rawValue).tag($0) }
@@ -272,7 +272,7 @@ struct UtilitiesView: View {
                         if !model.archiveMessage.isEmpty { Text(model.archiveMessage).font(.callout).foregroundStyle(.secondary) }
                     }
 
-                    Card(title: "Empreinte d'un fichier", icon: "number") {
+                    Card(title: String(localized: "Empreinte d'un fichier"), icon: "number") {
                         Button("Choisir un fichier…") { model.hashFile() }
                         ForEach(model.hashes, id: \.0) { h in
                             HStack(alignment: .top) {

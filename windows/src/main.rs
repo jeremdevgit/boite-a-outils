@@ -19,9 +19,11 @@ mod sensors;
 mod stress;
 mod taskbar;
 mod files;
+mod search;
 mod disktree;
 mod install;
 mod journal;
+mod langue;
 mod setup;
 mod shell;
 mod live;
@@ -92,6 +94,16 @@ fn asset(path: &str) -> Option<(&'static [u8], &'static str)> {
         "hw.js" => (include_bytes!("../ui/hw.js"), "text/javascript; charset=utf-8"),
         "pro.js" => (include_bytes!("../ui/pro.js"), "text/javascript; charset=utf-8"),
         "disk.js" => (include_bytes!("../ui/disk.js"), "text/javascript; charset=utf-8"),
+        "langue.js" => (include_bytes!("../ui/langue.js"), "text/javascript; charset=utf-8"),
+        "textes-chargeur.js" => (include_bytes!("../ui/textes-chargeur.js"), "text/javascript; charset=utf-8"),
+        // traductions : seule celle de la langue choisie est chargée
+        "textes/en.js" => (include_bytes!("../ui/textes/en.js"), "text/javascript; charset=utf-8"),
+        "textes/es.js" => (include_bytes!("../ui/textes/es.js"), "text/javascript; charset=utf-8"),
+        "textes/de.js" => (include_bytes!("../ui/textes/de.js"), "text/javascript; charset=utf-8"),
+        "textes/it.js" => (include_bytes!("../ui/textes/it.js"), "text/javascript; charset=utf-8"),
+        "textes/pt.js" => (include_bytes!("../ui/textes/pt.js"), "text/javascript; charset=utf-8"),
+        "textes/zh.js" => (include_bytes!("../ui/textes/zh.js"), "text/javascript; charset=utf-8"),
+        "textes/ja.js" => (include_bytes!("../ui/textes/ja.js"), "text/javascript; charset=utf-8"),
         "icon.png" => return None,
         _ => return None,
     })
@@ -166,6 +178,7 @@ fn dark_title_bar(hwnd: isize) {
 }
 
 fn main() {
+    langue::depuis_windows();
     runtime::install_panic_message();
     let args: Vec<String> = std::env::args().collect();
     // barre des tâches transparente : petit processus sans fenêtre ni droits administrateur
@@ -284,6 +297,8 @@ fn main() {
                     window.set_visible(true);
                 }
                 if v["cmd"] == "ready" {
+                    // langue choisie dans l'interface, pour les messages de Windows
+                    langue::definir(v["lang"].as_str().unwrap_or(""));
                     return;
                 }
                 if v["cmd"] == "log" {
@@ -396,6 +411,15 @@ fn tool_line(name: &str, drive: &str) -> Option<(&'static str, Vec<String>)> {
 
 fn run(cmd: &str, a: &Value, cancel: &AtomicBool, progress: &(dyn Fn(Value) + Sync)) -> Result<Value, String> {
     match cmd {
+        "search.start" => {
+            let root = a["root"].as_str().unwrap_or("");
+            let hidden = a["hidden"].as_bool().unwrap_or(false);
+            if root == "*" { search::start_all(win::drives().into_iter().map(|(drive, _, _)| drive).collect(), hidden) }
+            else { search::start(root, hidden) }
+        },
+        "search.status" => Ok(search::status()),
+        "search.query" => Ok(search::query(a)),
+        "search.stop" => Ok(search::stop()),
         "info" => {
             let (total, avail) = win::memory();
             Ok(json!({

@@ -37,7 +37,7 @@ pub fn ensure_admin(args: &[String]) -> bool {
     let params: Vec<String> = args.iter().skip(1).map(|a| format!("\"{}\"", a.replace('"', ""))).collect();
     if !crate::win::relaunch_elevated_with(&params.join(" ")) {
         use windows_sys::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONWARNING, MB_OK};
-        let text = crate::win::w("L'installation de la Boîte à outils demande les droits administrateur : elle s'installe pour tout le PC, dans un dossier protégé.\n\nRelancez l'installateur et acceptez l'invite de Windows.");
+        let text = crate::win::w(&format!("{}\n\n{}", crate::langue::tr("L'installation de la Boîte à outils demande les droits administrateur : elle s'installe pour tout le PC, dans un dossier protégé."), crate::langue::tr("Relancez l'installateur et acceptez l'invite de Windows.")));
         let title = crate::win::w("Boîte à outils");
         unsafe { MessageBoxW(std::ptr::null_mut(), text.as_ptr(), title.as_ptr(), MB_OK | MB_ICONWARNING) };
     }
@@ -63,7 +63,7 @@ pub fn run(mode: Mode, args: &[String]) {
 
     let event_loop = EventLoopBuilder::<Ev>::with_user_event().build();
     let proxy = event_loop.create_proxy();
-    let title = if mode == Mode::Setup { "Installer la Boîte à outils" } else { "Boîte à outils — désinstaller ou réparer" };
+    let title = crate::langue::tr(if mode == Mode::Setup { "Installer la Boîte à outils" } else { "Boîte à outils — désinstaller ou réparer" });
     let window = WindowBuilder::new()
         .with_title(title)
         .with_inner_size(tao::dpi::LogicalSize::new(640.0, 640.0))
@@ -113,17 +113,23 @@ pub fn run(mode: Mode, args: &[String]) {
                     }
                 };
                 match v["cmd"].as_str().unwrap_or("") {
-                    "init" => send(json!({
-                        "type": "init",
-                        "mode": if mode == Mode::Setup { "setup" } else { "maintenance" },
-                        "existing": install::installed_dir().is_some(),
-                        "installedVersion": install::installed_version(),
-                        "previous": install::previous_installs(),
-                        "opts": Options::default(),
-                        "version": env!("CARGO_PKG_VERSION"),
-                    })),
+                    "init" => {
+                        // langue de la page (celle de Windows, ou celle choisie dans l'application)
+                        if crate::langue::definir(v["lang"].as_str().unwrap_or("")) {
+                            window.set_title(crate::langue::tr(if mode == Mode::Setup { "Installer la Boîte à outils" } else { "Boîte à outils — désinstaller ou réparer" }));
+                        }
+                        send(json!({
+                            "type": "init",
+                            "mode": if mode == Mode::Setup { "setup" } else { "maintenance" },
+                            "existing": install::installed_dir().is_some(),
+                            "installedVersion": install::installed_version(),
+                            "previous": install::previous_installs(),
+                            "opts": Options::default(),
+                            "version": env!("CARGO_PKG_VERSION"),
+                        }))
+                    }
                     "browse" => {
-                        if let Some(d) = crate::shell::pick_folder(window.hwnd() as isize, "Dossier d'installation de la Boîte à outils") {
+                        if let Some(d) = crate::shell::pick_folder(window.hwnd() as isize, crate::langue::tr("Dossier d'installation de la Boîte à outils")) {
                             let p = std::path::PathBuf::from(&d);
                             let d = if p.file_name().is_some_and(|n| n.eq_ignore_ascii_case("BoiteAOutils")) { p } else { p.join("BoiteAOutils") };
                             send(json!({ "type": "dir", "dir": d.to_string_lossy() }));

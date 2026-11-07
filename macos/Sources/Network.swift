@@ -8,12 +8,12 @@ struct DNSPreset: Identifiable {
     let servers: [String]    // vide : DNS automatique (fournisseur d'accès)
 
     static let all: [DNSPreset] = [
-        DNSPreset(name: "Automatique", detail: "DNS de votre box / fournisseur d'accès", servers: []),
-        DNSPreset(name: "Cloudflare", detail: "Rapide et respectueux de la vie privée", servers: ["1.1.1.1", "1.0.0.1"]),
-        DNSPreset(name: "Cloudflare Familles", detail: "Bloque les logiciels malveillants et contenus adultes", servers: ["1.1.1.3", "1.0.0.3"]),
-        DNSPreset(name: "Quad9", detail: "Bloque les domaines malveillants", servers: ["9.9.9.9", "149.112.112.112"]),
-        DNSPreset(name: "Google", detail: "Public DNS de Google", servers: ["8.8.8.8", "8.8.4.4"]),
-        DNSPreset(name: "AdGuard", detail: "Bloque publicités et traqueurs", servers: ["94.140.14.14", "94.140.15.15"]),
+        DNSPreset(name: String(localized: "Automatique"), detail: String(localized: "DNS de votre box / fournisseur d'accès"), servers: []),
+        DNSPreset(name: "Cloudflare", detail: String(localized: "Rapide et respectueux de la vie privée"), servers: ["1.1.1.1", "1.0.0.1"]),
+        DNSPreset(name: String(localized: "Cloudflare Familles"), detail: String(localized: "Bloque les logiciels malveillants et contenus adultes"), servers: ["1.1.1.3", "1.0.0.3"]),
+        DNSPreset(name: "Quad9", detail: String(localized: "Bloque les domaines malveillants"), servers: ["9.9.9.9", "149.112.112.112"]),
+        DNSPreset(name: "Google", detail: String(localized: "Public DNS de Google"), servers: ["8.8.8.8", "8.8.4.4"]),
+        DNSPreset(name: "AdGuard", detail: String(localized: "Bloque publicités et traqueurs"), servers: ["94.140.14.14", "94.140.15.15"]),
     ]
 }
 
@@ -62,21 +62,21 @@ final class NetworkModel: ObservableObject {
               let iface = ((o["SPAirPortDataType"] as? [[String: Any]])?.first?["spairport_airport_interfaces"] as? [[String: Any]])?.first,
               let c = iface["spairport_current_network_information"] as? [String: Any] else { return [] }
         var rows: [(String, String)] = []
-        if let n = c["_name"] as? String { rows.append(("Réseau", n)) }
+        if let n = c["_name"] as? String { rows.append((String(localized: "Réseau"), n)) }
         if let s = c["spairport_signal_noise"] as? String {
-            rows.append(("Signal / bruit", s))
+            rows.append((String(localized: "Signal / bruit"), s))
             let nums = s.components(separatedBy: CharacterSet(charactersIn: "-0123456789").inverted).compactMap { Int($0) }
             if nums.count >= 2 {
                 let snr = nums[0] - nums[1]
-                rows.append(("Qualité", "\(snr) dB — " + (snr >= 40 ? "excellente" : snr >= 25 ? "bonne" : snr >= 15 ? "moyenne" : "faible")))
+                rows.append((String(localized: "Qualité"), "\(snr) dB — " + (snr >= 40 ? String(localized: "excellente") : snr >= 25 ? String(localized: "bonne") : snr >= 15 ? String(localized: "moyenne") : String(localized: "faible"))))
             }
         }
-        if let ch = c["spairport_network_channel"] as? String { rows.append(("Canal", ch)) }
-        if let p = c["spairport_network_phymode"] as? String { rows.append(("Norme", p + (p.contains("ax") ? " (Wi-Fi 6)" : p.contains("be") ? " (Wi-Fi 7)" : p.contains("ac") ? " (Wi-Fi 5)" : ""))) }
-        if let r = c["spairport_network_rate"] as? Int { rows.append(("Débit négocié", "\(r) Mb/s")) }
+        if let ch = c["spairport_network_channel"] as? String { rows.append((String(localized: "Canal"), ch)) }
+        if let p = c["spairport_network_phymode"] as? String { rows.append((String(localized: "Norme"), p + (p.contains("ax") ? " (Wi-Fi 6)" : p.contains("be") ? " (Wi-Fi 7)" : p.contains("ac") ? " (Wi-Fi 5)" : ""))) }
+        if let r = c["spairport_network_rate"] as? Int { rows.append((String(localized: "Débit négocié"), "\(r) Mb/s")) }
         if let sec = c["spairport_security_mode"] as? String {
             let open = sec.contains("none")
-            rows.append(("Sécurité", open ? "Aucune (réseau ouvert ⚠︎)" : sec.replacingOccurrences(of: "spairport_security_mode_", with: "").replacingOccurrences(of: "_", with: " ").uppercased()))
+            rows.append((String(localized: "Sécurité"), open ? String(localized: "Aucune (réseau ouvert ⚠︎)") : sec.replacingOccurrences(of: "spairport_security_mode_", with: "").replacingOccurrences(of: "_", with: " ").uppercased()))
         }
         return rows
     }
@@ -100,7 +100,7 @@ final class NetworkModel: ObservableObject {
             let servers = p.servers.isEmpty ? "Empty" : p.servers.joined(separator: " ")
             let r = Shell.admin("networksetup -setdnsservers \(Shell.quote(svc)) \(servers) && dscacheutil -flushcache; killall -HUP mDNSResponder; true")
             DispatchQueue.main.async {
-                self.message = r.ok ? "DNS « \(p.name) » appliqué sur \(svc)." : "Annulé."
+                self.message = r.ok ? String(localized: "DNS « \(p.name) » appliqué sur \(svc).") : String(localized: "Annulé.")
                 self.loadDNS()
             }
         }
@@ -126,10 +126,10 @@ final class NetworkModel: ObservableObject {
                 }
                 let rpm = (j["responsiveness"] as? Double) ?? (j["dl_responsiveness"] as? Double)
                 text = "↓ \(mbps("dl_throughput"))   ↑ \(mbps("ul_throughput"))"
-                if let rpm { text += "   Réactivité : \(Int(rpm)) RPM" }
+                if let rpm { text += String(localized: "   Réactivité : \(Int(rpm)) RPM") }
             }
             DispatchQueue.main.async {
-                self.speed = r.ok ? text : "Échec du test : \(r.output)"
+                self.speed = r.ok ? text : String(localized: "Échec du test : \(r.output)")
                 self.testing = false
             }
         }
@@ -141,7 +141,7 @@ final class NetworkModel: ObservableObject {
             .components(separatedBy: "/").first ?? ""
         // Nom de domaine uniquement : empêche d'injecter d'autres lignes dans /etc/hosts.
         guard !d.isEmpty, d.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "." || $0 == "-") }), d.contains(".") else {
-            message = "« \(domain) » n'est pas un nom de domaine valide (ex. : exemple.com)."
+            message = String(localized: "« \(domain) » n'est pas un nom de domaine valide (ex. : exemple.com).")
             return
         }
         let bare = d.hasPrefix("www.") ? String(d.dropFirst(4)) : d
@@ -160,9 +160,9 @@ final class NetworkModel: ObservableObject {
             DispatchQueue.main.async {
                 if r.ok {
                     self.savedHosts = content
-                    self.message = "Fichier hosts enregistré (sauvegarde d'origine : /etc/hosts.boiteaoutils.bak)."
+                    self.message = String(localized: "Fichier hosts enregistré (sauvegarde d'origine : /etc/hosts.boiteaoutils.bak).")
                 } else {
-                    self.message = "Enregistrement annulé."
+                    self.message = String(localized: "Enregistrement annulé.")
                 }
             }
         }
@@ -175,7 +175,7 @@ struct NetworkView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Réseau", subtitle: "DNS, blocage de sites, adresses IP et test de débit",
+            PageHeader(title: String(localized: "Réseau"), subtitle: String(localized: "DNS, blocage de sites, adresses IP et test de débit"),
                        icon: "network", color: .blue) {
                 Button { model.load() } label: { Label("Actualiser", systemImage: "arrow.clockwise") }
             }
@@ -221,7 +221,7 @@ struct NetworkView: View {
                         ForEach(model.services, id: \.self) { Text($0).tag($0) }
                     }
                     .onChange(of: model.service) { _, _ in model.loadDNS() }
-                    LabeledContent("DNS actuels", value: model.dns.isEmpty ? "Automatique" : model.dns.joined(separator: ", "))
+                    LabeledContent("DNS actuels", value: model.dns.isEmpty ? String(localized: "Automatique") : model.dns.joined(separator: ", "))
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 10)], spacing: 10) {
                         ForEach(DNSPreset.all) { p in
                             Button { model.apply(p) } label: {

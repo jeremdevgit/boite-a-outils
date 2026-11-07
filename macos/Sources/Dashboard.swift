@@ -148,7 +148,7 @@ struct DashboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                PageHeader(title: info.computerName.isEmpty ? "Mon Mac" : info.computerName,
+                PageHeader(title: info.computerName.isEmpty ? String(localized: "Mon Mac") : info.computerName,
                            subtitle: [info.model, info.chip, info.osVersion].filter { !$0.isEmpty }.joined(separator: " · "),
                            icon: "laptopcomputer", color: .blue) {
                     if model.loading { ProgressView().controlSize(.small) }
@@ -158,7 +158,7 @@ struct DashboardView: View {
                 smartScan.padding(.horizontal, 24)
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 16)], spacing: 16) {
-                    Card(title: "Disque", icon: "internaldrive") {
+                    Card(title: String(localized: "Disque"), icon: "internaldrive") {
                         HStack(spacing: 16) {
                             Ring(value: info.diskUsedRatio, color: info.diskUsedRatio > 0.85 ? .red : .indigo)
                             VStack(alignment: .leading, spacing: 4) {
@@ -167,7 +167,7 @@ struct DashboardView: View {
                             }
                         }
                     }
-                    Card(title: "Mémoire", icon: "memorychip") {
+                    Card(title: String(localized: "Mémoire"), icon: "memorychip") {
                         HStack(spacing: 16) {
                             Ring(value: info.memRatio, color: info.memRatio > 0.85 ? .orange : .green)
                             VStack(alignment: .leading, spacing: 4) {
@@ -176,7 +176,7 @@ struct DashboardView: View {
                             }
                         }
                     }
-                    Card(title: "Processeur", icon: "cpu") {
+                    Card(title: String(localized: "Processeur"), icon: "cpu") {
                         HStack(spacing: 16) {
                             Ring(value: info.cpuUsage / 100, color: info.cpuUsage > 70 ? .orange : .purple)
                             VStack(alignment: .leading, spacing: 4) {
@@ -186,7 +186,7 @@ struct DashboardView: View {
                         }
                     }
                     if let b = info.battery {
-                        Card(title: "Batterie", icon: b.charging ? "battery.100.bolt" : "battery.75") {
+                        Card(title: String(localized: "Batterie"), icon: b.charging ? "battery.100.bolt" : "battery.75") {
                             HStack(spacing: 16) {
                                 Ring(value: Double(b.maxCapacity ?? 100) / 100,
                                      color: (b.maxCapacity ?? 100) < 80 ? .orange : .green,
@@ -203,18 +203,18 @@ struct DashboardView: View {
                 .padding(.horizontal, 24)
 
                 HStack(alignment: .top, spacing: 16) {
-                    Card(title: "Sécurité", icon: "checkmark.shield") {
-                        securityRow("Protection de l'intégrité (SIP)", info.security.sip)
+                    Card(title: String(localized: "Sécurité"), icon: "checkmark.shield") {
+                        securityRow(String(localized: "Protection de l'intégrité (SIP)"), info.security.sip)
                         securityRow("Gatekeeper", info.security.gatekeeper)
-                        securityRow("Chiffrement FileVault", info.security.fileVault)
-                        securityRow("Pare-feu", info.security.firewall)
+                        securityRow(String(localized: "Chiffrement FileVault"), info.security.fileVault)
+                        securityRow(String(localized: "Pare-feu"), info.security.firewall)
                         if !info.security.firewall || !info.security.fileVault {
                             Button("Ouvrir Confidentialité et sécurité") {
                                 Permissions.openSettings("x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension")
                             }
                         }
                     }
-                    Card(title: "Recommandations", icon: "lightbulb") {
+                    Card(title: String(localized: "Recommandations"), icon: "lightbulb") {
                         if advices.isEmpty {
                             Label("Tout est en ordre 👌", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                         }
@@ -283,23 +283,23 @@ struct DashboardView: View {
         guard model.loaded else { return [] }
         var a: [Advice] = []
         if info.diskTotal > 0 && Double(info.diskFree) / Double(info.diskTotal) < 0.15 {
-            a.append(Advice(icon: "internaldrive", color: .red, text: "Espace disque faible (moins de 15 % libre).", actionTitle: "Libérer", target: .space))
+            a.append(Advice(icon: "internaldrive", color: .red, text: String(localized: "Espace disque faible (moins de 15 % libre)."), actionTitle: String(localized: "Libérer"), target: .space))
         }
         if cleaner.scannedOnce && cleaner.totalSize > 1_000_000_000 {
-            a.append(Advice(icon: "sparkles", color: .pink, text: "\(formatBytes(cleaner.totalSize)) de fichiers inutiles peuvent être supprimés.", actionTitle: "Nettoyer", target: .cleaner))
+            a.append(Advice(icon: "sparkles", color: .pink, text: String(localized: "\(formatBytes(cleaner.totalSize)) de fichiers inutiles peuvent être supprimés."), actionTitle: String(localized: "Nettoyer"), target: .cleaner))
         }
         if info.uptime > 7 * 86400 {
-            a.append(Advice(icon: "restart", color: .orange, text: "Votre Mac n'a pas redémarré depuis plus d'une semaine. Un redémarrage libère la mémoire et applique les mises à jour."))
+            a.append(Advice(icon: "restart", color: .orange, text: String(localized: "Votre Mac n'a pas redémarré depuis plus d'une semaine. Un redémarrage libère la mémoire et applique les mises à jour.")))
         }
         if info.memRatio > 0.85 {
-            a.append(Advice(icon: "memorychip", color: .orange, text: "La mémoire est très sollicitée.", actionTitle: "Processus", target: .processes))
+            a.append(Advice(icon: "memorychip", color: .orange, text: String(localized: "La mémoire est très sollicitée."), actionTitle: String(localized: "Processus"), target: .processes))
         }
         if let m = info.battery?.maxCapacity, m < 80 {
-            a.append(Advice(icon: "battery.25", color: .orange, text: "Capacité maximale de la batterie à \(m) % : un remplacement peut être envisagé."))
+            a.append(Advice(icon: "battery.25", color: .orange, text: String(localized: "Capacité maximale de la batterie à \(m) % : un remplacement peut être envisagé.")))
         }
         if permissions.states[.fullDisk] == .denied {
-            a.append(Advice(icon: "lock", color: .yellow, text: "Accordez l'« Accès complet au disque » pour une analyse plus complète.",
-                            actionTitle: "Autorisations", target: .permissions))
+            a.append(Advice(icon: "lock", color: .yellow, text: String(localized: "Accordez l'« Accès complet au disque » pour une analyse plus complète."),
+                            actionTitle: String(localized: "Autorisations"), target: .permissions))
         }
         return a
     }

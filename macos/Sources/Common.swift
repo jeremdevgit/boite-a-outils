@@ -124,7 +124,7 @@ enum FS {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.directoryURL = start
-        panel.prompt = "Choisir"
+        panel.prompt = String(localized: "Choisir")
         return panel.runModal() == .OK ? panel.url : nil
     }
 

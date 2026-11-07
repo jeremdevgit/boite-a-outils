@@ -53,17 +53,17 @@ struct SensorsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageHeader(title: "Capteurs", subtitle: "Températures, ventilateurs, consommation et GPU en direct",
+                PageHeader(title: String(localized: "Capteurs"), subtitle: String(localized: "Températures, ventilateurs, consommation et GPU en direct"),
                            icon: "thermometer.medium", color: .red)
                 Group {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
-                        if let s = model.power.systemWatts { tile(String(format: "%.1f W", s), "Consommation totale", "bolt.fill") }
-                        if let g = model.gpu { tile("\(Int(g)) %", "Utilisation GPU", "cpu.fill") }
+                        if let s = model.power.systemWatts { tile(String(format: "%.1f W", s), String(localized: "Consommation totale"), "bolt.fill") }
+                        if let g = model.gpu { tile("\(Int(g)) %", String(localized: "Utilisation GPU"), "cpu.fill") }
                         if let hot = model.readings.max(by: { $0.value < $1.value }) {
-                            tile(String(format: "%.0f °C", hot.value), "Capteur le plus chaud", "flame.fill")
+                            tile(String(format: "%.0f °C", hot.value), String(localized: "Capteur le plus chaud"), "flame.fill")
                         }
                         ForEach(model.fans) { f in
-                            tile("\(Int(f.rpm)) tr/min", "Ventilateur \(f.id + 1) (\(Int(f.min))–\(Int(f.max)))", "fan.fill")
+                            tile(String(localized: "\(Int(f.rpm)) tr/min"), String(localized: "Ventilateur \(f.id + 1) (\(Int(f.min))–\(Int(f.max)))"), "fan.fill")
                         }
                     }
                     if model.fans.isEmpty {
@@ -86,8 +86,8 @@ struct SensorsView: View {
                                     Text(g.name).bold()
                                     Text("\(g.items.count) capteurs").font(.caption).foregroundStyle(.secondary)
                                     Spacer()
-                                    Text(String(format: "moy. %.0f °C", g.avg)).foregroundStyle(.secondary).monospacedDigit()
-                                    Text(String(format: "max %.0f °C", g.max)).bold().monospacedDigit().foregroundStyle(color(g.max))
+                                    Text(String(format: String(localized: "moy. %.0f °C"), g.avg)).foregroundStyle(.secondary).monospacedDigit()
+                                    Text(String(format: String(localized: "max %.0f °C"), g.max)).bold().monospacedDigit().foregroundStyle(color(g.max))
                                         .frame(width: 90, alignment: .trailing)
                                 }
                             }
@@ -162,9 +162,9 @@ final class DisksModel: ObservableObject {
                           let i = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else { continue }
                     disks.append(PhysicalDisk(
                         bsd: w, name: i["MediaName"] as? String ?? w, size: (i["TotalSize"] as? NSNumber)?.int64Value ?? 0,
-                        smart: i["SMARTStatus"] as? String ?? "Non pris en charge", solidState: i["SolidState"] as? Bool ?? false,
+                        smart: i["SMARTStatus"] as? String ?? String(localized: "Non pris en charge"), solidState: i["SolidState"] as? Bool ?? false,
                         internalDisk: i["Internal"] as? Bool ?? false, protocolName: i["BusProtocol"] as? String ?? "",
-                        trim: nvme.contains("\"\(w)\"") ? (nvme.contains("\"spnvme_trim_support\" : \"Yes\"") ? "Oui" : "Non") : nil))
+                        trim: nvme.contains("\"\(w)\"") ? (nvme.contains("\"spnvme_trim_support\" : \"Yes\"") ? String(localized: "Oui") : String(localized: "Non")) : nil))
                 }
             }
             let keys: [URLResourceKey] = [.volumeNameKey, .volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey,
@@ -204,7 +204,7 @@ final class DisksModel: ObservableObject {
 
             let fd = open(file.path, O_CREAT | O_WRONLY | O_TRUNC, 0o600)
             guard fd >= 0 else {
-                DispatchQueue.main.async { self.testing = false; self.progress = "Impossible d'écrire sur ce volume." }
+                DispatchQueue.main.async { self.testing = false; self.progress = String(localized: "Impossible d'écrire sur ce volume.") }
                 return
             }
             _ = fcntl(fd, F_NOCACHE, 1)
@@ -212,7 +212,7 @@ final class DisksModel: ObservableObject {
             for i in 0..<chunks {
                 if self.cancelled { break }
                 _ = buffer.withUnsafeBytes { Darwin.write(fd, $0.baseAddress, chunk) }
-                if i % 8 == 0 { let p = i * 100 / chunks; DispatchQueue.main.async { self.progress = "Écriture… \(p) %" } }
+                if i % 8 == 0 { let p = i * 100 / chunks; DispatchQueue.main.async { self.progress = String(localized: "Écriture… \(p) %") } }
             }
             fsync(fd)
             close(fd)
@@ -226,7 +226,7 @@ final class DisksModel: ObservableObject {
                 let n = buffer.withUnsafeMutableBytes { Darwin.read(rfd, $0.baseAddress, chunk) }
                 if n <= 0 { break }
                 readBytes += n
-                if (readBytes / chunk) % 8 == 0 { let p = readBytes * 100 / max(total * 1024 * 1024, 1); DispatchQueue.main.async { self.progress = "Lecture… \(p) %" } }
+                if (readBytes / chunk) % 8 == 0 { let p = readBytes * 100 / max(total * 1024 * 1024, 1); DispatchQueue.main.async { self.progress = String(localized: "Lecture… \(p) %") } }
             }
             close(rfd)
             let r = Double(readBytes) / 1_048_576 / Date().timeIntervalSince(t0)
@@ -240,12 +240,12 @@ final class DisksModel: ObservableObject {
 
     static func interpretation(_ mbps: Double) -> String {
         switch mbps {
-        case ..<45: "Équivalent USB 2.0 : câble, port ou adaptateur probablement limitant (voir « Câbles & ports »)."
-        case ..<200: "Disque dur ou clé USB classique."
-        case ..<500: "Niveau USB 3 (5 Gb/s) ou SSD SATA."
-        case ..<1100: "Niveau USB 3.2 Gen 2 (10 Gb/s)."
-        case ..<3000: "SSD NVMe rapide ou Thunderbolt/USB4."
-        default: "Très haut débit (SSD interne Apple, Thunderbolt 4/5)."
+        case ..<45: String(localized: "Équivalent USB 2.0 : câble, port ou adaptateur probablement limitant (voir « Câbles & ports »).")
+        case ..<200: String(localized: "Disque dur ou clé USB classique.")
+        case ..<500: String(localized: "Niveau USB 3 (5 Gb/s) ou SSD SATA.")
+        case ..<1100: String(localized: "Niveau USB 3.2 Gen 2 (10 Gb/s).")
+        case ..<3000: String(localized: "SSD NVMe rapide ou Thunderbolt/USB4.")
+        default: String(localized: "Très haut débit (SSD interne Apple, Thunderbolt 4/5).")
         }
     }
 }
@@ -256,7 +256,7 @@ struct DisksView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageHeader(title: "Disques", subtitle: "Santé SMART, volumes et test de vitesse réel",
+                PageHeader(title: String(localized: "Disques"), subtitle: String(localized: "Santé SMART, volumes et test de vitesse réel"),
                            icon: "internaldrive.fill", color: .indigo) {
                     Button { model.load() } label: { Label("Actualiser", systemImage: "arrow.clockwise") }
                     Button("Utilitaire de disque") { NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Disk Utility.app")) }
@@ -280,7 +280,7 @@ struct DisksView: View {
                             }
                         }
                     }
-                    Card(title: "Volumes", icon: "square.stack.3d.up") {
+                    Card(title: String(localized: "Volumes"), icon: "square.stack.3d.up") {
                         ForEach(model.volumes) { v in
                             HStack {
                                 Text(v.name).frame(width: 180, alignment: .leading)
@@ -291,7 +291,7 @@ struct DisksView: View {
                             }
                         }
                     }
-                    Card(title: "Test de vitesse", icon: "speedometer") {
+                    Card(title: String(localized: "Test de vitesse"), icon: "speedometer") {
                         HStack {
                             Picker("Volume", selection: $model.testVolume) {
                                 ForEach(model.volumes.filter(\.writable)) { Text($0.name).tag(Optional($0.url)) }
@@ -310,11 +310,11 @@ struct DisksView: View {
                         if let w = model.write, let r = model.read {
                             HStack(spacing: 30) {
                                 VStack(alignment: .leading) {
-                                    Text(String(format: "%.0f Mo/s", w)).font(.title.bold().monospacedDigit())
+                                    Text(String(format: String(localized: "%.0f Mo/s"), w)).font(.title.bold().monospacedDigit())
                                     Text("Écriture").foregroundStyle(.secondary)
                                 }
                                 VStack(alignment: .leading) {
-                                    Text(String(format: "%.0f Mo/s", r)).font(.title.bold().monospacedDigit())
+                                    Text(String(format: String(localized: "%.0f Mo/s"), r)).font(.title.bold().monospacedDigit())
                                     Text("Lecture").foregroundStyle(.secondary)
                                 }
                             }
@@ -388,7 +388,7 @@ final class DisplaysModel: ObservableObject {
                 if a.hiDPI != b.hiDPI { return a.hiDPI }
                 return a.refresh > b.refresh
             }
-            return DisplayInfo(id: id, name: screen?.localizedName ?? "Écran \(id)", builtIn: CGDisplayIsBuiltin(id) != 0,
+            return DisplayInfo(id: id, name: screen?.localizedName ?? String(localized: "Écran \(id)"), builtIn: CGDisplayIsBuiltin(id) != 0,
                                main: CGDisplayIsMain(id) != 0, current: CGDisplayCopyDisplayMode(id).map(Self.info), modes: modes,
                                sizeMM: CGDisplayScreenSize(id), vendor: CGDisplayVendorNumber(id), model: CGDisplayModelNumber(id))
         }
@@ -397,7 +397,7 @@ final class DisplaysModel: ObservableObject {
             var text = ""
             if let d = out.data(using: .utf8), let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
                let g = (o["SPDisplaysDataType"] as? [[String: Any]])?.first {
-                text = [g["sppci_model"] as? String, (g["sppci_cores"] as? String).map { "\($0) cœurs GPU" },
+                text = [g["sppci_model"] as? String, (g["sppci_cores"] as? String).map { String(localized: "\($0) cœurs GPU") },
                         (g["spdisplays_mtlgpufamilysupport"] as? String)?.replacingOccurrences(of: "spdisplays_", with: "")]
                     .compactMap { $0 }.joined(separator: " · ")
             }
@@ -451,7 +451,7 @@ struct DisplaysView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageHeader(title: "Écrans", subtitle: "Résolutions (y compris HiDPI cachées), fréquence, taille réelle",
+                PageHeader(title: String(localized: "Écrans"), subtitle: String(localized: "Résolutions (y compris HiDPI cachées), fréquence, taille réelle"),
                            icon: "display.2", color: .cyan) {
                     Toggle("Afficher toutes les résolutions", isOn: $showAll).toggleStyle(.checkbox)
                     Button { model.load() } label: { Label("Actualiser", systemImage: "arrow.clockwise") }
@@ -484,13 +484,13 @@ struct DisplaysView: View {
             HStack {
                 Image(systemName: d.builtIn ? "laptopcomputer" : "display").font(.title)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(d.name + (d.main ? " (principal)" : "")).font(.headline)
+                    Text(d.name + (d.main ? String(localized: " (principal)") : "")).font(.headline)
                     if let c = d.current {
                         Text("\(c.width) × \(c.height)\(c.hiDPI ? " HiDPI" : "") · \(c.pixelWidth) × \(c.pixelHeight) pixels · \(c.refresh > 0 ? "\(Int(c.refresh.rounded())) Hz" : "fréquence variable")")
                             .foregroundStyle(.secondary)
                     }
-                    Text(String(format: "%.1f pouces", d.diagonalInches) + (d.ppi.map { String(format: " · %.0f ppp", $0) } ?? "") +
-                         String(format: " · fabricant 0x%04X, modèle 0x%04X", d.vendor, d.model))
+                    Text(String(format: String(localized: "%.1f pouces"), d.diagonalInches) + (d.ppi.map { String(format: String(localized: " · %.0f ppp"), $0) } ?? "") +
+                         String(format: String(localized: " · fabricant 0x%04X, modèle 0x%04X"), d.vendor, d.model))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()

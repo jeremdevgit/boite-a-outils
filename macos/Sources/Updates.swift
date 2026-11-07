@@ -52,7 +52,7 @@ struct UpdatesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageHeader(title: "Mises à jour", subtitle: "Gardez macOS et vos applications à jour",
+                PageHeader(title: String(localized: "Mises à jour"), subtitle: String(localized: "Gardez macOS et vos applications à jour"),
                            icon: "arrow.down.circle.fill", color: .cyan) {
                     if model.checking { ProgressView().controlSize(.small) }
                     Button { model.check() } label: { Label("Rechercher", systemImage: "arrow.clockwise") }

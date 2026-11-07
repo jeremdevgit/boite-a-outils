@@ -36,39 +36,39 @@ struct CleanTarget {
     var matcher: ((URL) -> Bool)? = nil
 
     static let all: [CleanTarget] = [
-        CleanTarget(id: "caches", name: "Caches des applications", icon: "archivebox.fill",
-                    detail: "Fichiers temporaires que les apps recréent automatiquement.",
+        CleanTarget(id: "caches", name: String(localized: "Caches des applications"), icon: "archivebox.fill",
+                    detail: String(localized: "Fichiers temporaires que les apps recréent automatiquement."),
                     roots: ["Library/Caches"], permanent: true, preselected: true,
                     excluded: ["com.boiteaoutils.mac", "CloudKit", "com.apple.HomeKit", "FamilyCircle", "com.apple.containermanagerd"]),
-        CleanTarget(id: "logs", name: "Journaux et rapports de plantage", icon: "doc.text.fill",
-                    detail: "Historique technique des applications, inutile au quotidien.",
+        CleanTarget(id: "logs", name: String(localized: "Journaux et rapports de plantage"), icon: "doc.text.fill",
+                    detail: String(localized: "Historique technique des applications, inutile au quotidien."),
                     roots: ["Library/Logs"], permanent: true, preselected: true, excluded: ["BoiteAOutils"]),
-        CleanTarget(id: "state", name: "États sauvegardés des fenêtres", icon: "macwindow.on.rectangle",
-                    detail: "Mémorisation des fenêtres ouvertes à la fermeture des apps.",
+        CleanTarget(id: "state", name: String(localized: "États sauvegardés des fenêtres"), icon: "macwindow.on.rectangle",
+                    detail: String(localized: "Mémorisation des fenêtres ouvertes à la fermeture des apps."),
                     roots: ["Library/Saved Application State"], permanent: true, preselected: false),
-        CleanTarget(id: "dev", name: "Fichiers de développement", icon: "hammer.fill",
-                    detail: "Xcode (DerivedData, DeviceSupport), caches de simulateurs, npm, Gradle.",
+        CleanTarget(id: "dev", name: String(localized: "Fichiers de développement"), icon: "hammer.fill",
+                    detail: String(localized: "Xcode (DerivedData, DeviceSupport), caches de simulateurs, npm, Gradle."),
                     roots: ["Library/Developer/Xcode/DerivedData", "Library/Developer/Xcode/iOS DeviceSupport",
                             "Library/Developer/CoreSimulator/Caches", ".npm/_cacache", ".gradle/caches"],
                     permanent: true, preselected: true),
-        CleanTarget(id: "trash", name: "Corbeille", icon: "trash.fill",
-                    detail: "Éléments déjà placés dans la corbeille.",
+        CleanTarget(id: "trash", name: String(localized: "Corbeille"), icon: "trash.fill",
+                    detail: String(localized: "Éléments déjà placés dans la corbeille."),
                     roots: [".Trash"], permanent: true, preselected: true),
-        CleanTarget(id: "mail", name: "Pièces jointes Mail téléchargées", icon: "paperclip",
-                    detail: "Copies locales des pièces jointes ouvertes depuis Mail.",
+        CleanTarget(id: "mail", name: String(localized: "Pièces jointes Mail téléchargées"), icon: "paperclip",
+                    detail: String(localized: "Copies locales des pièces jointes ouvertes depuis Mail."),
                     roots: ["Library/Containers/com.apple.mail/Data/Library/Mail Downloads"], permanent: false, preselected: false),
-        CleanTarget(id: "ios", name: "Sauvegardes iPhone / iPad", icon: "iphone",
-                    detail: "Anciennes sauvegardes locales d'appareils iOS. À vérifier avant suppression !",
+        CleanTarget(id: "ios", name: String(localized: "Sauvegardes iPhone / iPad"), icon: "iphone",
+                    detail: String(localized: "Anciennes sauvegardes locales d'appareils iOS. À vérifier avant suppression !"),
                     roots: ["Library/Application Support/MobileSync/Backup"], permanent: false, preselected: false),
-        CleanTarget(id: "installers", name: "Installeurs inutiles", icon: "shippingbox.fill",
-                    detail: "Images disque (.dmg), paquets (.pkg) et installeurs macOS déjà utilisés.",
+        CleanTarget(id: "installers", name: String(localized: "Installeurs inutiles"), icon: "shippingbox.fill",
+                    detail: String(localized: "Images disque (.dmg), paquets (.pkg) et installeurs macOS déjà utilisés."),
                     roots: ["Downloads", "Desktop", "/Applications"], permanent: false, preselected: false,
                     matcher: { u in
                         ["dmg", "pkg", "mpkg", "xip", "iso"].contains(u.pathExtension.lowercased())
                             || (u.pathExtension == "app" && u.lastPathComponent.hasPrefix("Install macOS"))
                     }),
-        CleanTarget(id: "downloads", name: "Téléchargements de plus de 90 jours", icon: "arrow.down.circle.fill",
-                    detail: "Fichiers anciens du dossier Téléchargements (envoyés à la corbeille).",
+        CleanTarget(id: "downloads", name: String(localized: "Téléchargements de plus de 90 jours"), icon: "arrow.down.circle.fill",
+                    detail: String(localized: "Fichiers anciens du dossier Téléchargements (envoyés à la corbeille)."),
                     roots: ["Downloads"], permanent: false, preselected: false, olderThanDays: 90),
     ]
 }
@@ -94,7 +94,7 @@ final class CleanerModel: ObservableObject {
             let userIgnored = IgnoreList.get("cleaner")
             var seen = Set<String>()
             for t in CleanTarget.all {
-                DispatchQueue.main.async { self.status = "Analyse : \(t.name)…" }
+                DispatchQueue.main.async { self.status = String(localized: "Analyse : \(t.name)…") }
                 var items: [CleanItem] = []
                 for r in t.roots {
                     let base = r.hasPrefix("/") ? URL(fileURLWithPath: r) : FS.home.appendingPathComponent(r)
@@ -168,7 +168,7 @@ struct CleanerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Nettoyage système", subtitle: "Caches, journaux, corbeille et fichiers superflus",
+            PageHeader(title: String(localized: "Nettoyage système"), subtitle: String(localized: "Caches, journaux, corbeille et fichiers superflus"),
                        icon: "sparkles", color: .pink) {
                 if model.scannedOnce && !model.scanning {
                     Button { model.scan() } label: { Label("Réanalyser", systemImage: "arrow.clockwise") }
@@ -179,7 +179,7 @@ struct CleanerView: View {
             if let r = model.lastResult {
                 HStack {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                    Text("\(formatBytes(r.freed)) libérés." + (r.failed > 0 ? " \(r.failed) élément(s) protégé(s) ignoré(s)." : ""))
+                    Text(String(localized: "\(formatBytes(r.freed)) libérés.") + (r.failed > 0 ? String(localized: " \(r.failed) élément(s) protégé(s) ignoré(s).") : ""))
                     Spacer()
                     Button { model.lastResult = nil } label: { Image(systemName: "xmark") }.buttonStyle(.borderless)
                 }
@@ -191,15 +191,15 @@ struct CleanerView: View {
             if model.scanning || model.cleaning {
                 VStack(spacing: 12) {
                     ProgressView()
-                    Text(model.cleaning ? "Nettoyage en cours…" : model.status).foregroundStyle(.secondary)
+                    Text(model.cleaning ? String(localized: "Nettoyage en cours…") : model.status).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !model.scannedOnce {
-                EmptyState(icon: "sparkles", title: "Prêt à analyser",
-                           message: "La Boîte à outils va rechercher les fichiers inutiles. Rien n'est supprimé sans votre accord.",
-                           actionTitle: "Lancer l'analyse") { model.scan() }
+                EmptyState(icon: "sparkles", title: String(localized: "Prêt à analyser"),
+                           message: String(localized: "La Boîte à outils va rechercher les fichiers inutiles. Rien n'est supprimé sans votre accord."),
+                           actionTitle: String(localized: "Lancer l'analyse")) { model.scan() }
             } else if model.categories.isEmpty {
-                EmptyState(icon: "checkmark.seal", title: "Votre Mac est propre", message: "Aucun fichier inutile trouvé.")
+                EmptyState(icon: "checkmark.seal", title: String(localized: "Votre Mac est propre"), message: String(localized: "Aucun fichier inutile trouvé."))
             } else {
                 List {
                     ForEach($model.categories) { $cat in
@@ -227,7 +227,7 @@ struct CleanerView: View {
                                 Image(systemName: cat.icon).foregroundStyle(.pink).frame(width: 22)
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(cat.name).bold()
-                                    Text(cat.detail + (cat.permanent ? "" : " → Corbeille"))
+                                    Text(cat.detail + (cat.permanent ? "" : String(localized: " → Corbeille")))
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
@@ -245,6 +245,8 @@ struct CleanerView: View {
                         Text("Trouvé au total : \(formatBytes(model.totalSize)) · clic droit sur un élément pour l'exclure")
                             .font(.caption).foregroundStyle(.secondary)
                     }
+                    Button("Tout sélectionner") { for c in model.categories.indices { for i in model.categories[c].items.indices { model.categories[c].items[i].selected = true } } }
+                    Button("Tout désélectionner") { for c in model.categories.indices { for i in model.categories[c].items.indices { model.categories[c].items[i].selected = false } } }
                     Spacer()
                     if !IgnoreList.get("cleaner").isEmpty {
                         Button("Réinitialiser les exclusions") { IgnoreList.reset("cleaner"); model.scan() }

@@ -16,28 +16,28 @@ enum Author {
     static let name = "jeremdevgit"
     static let profile = URL(string: "https://github.com/jeremdevgit")!
     static let apps: [MyApp] = [
-        MyApp(name: "Boîte à outils pour Windows", platform: "Windows",
-              summary: "La même idée pour le PC : démarrage, services, nettoyage, réglages cachés et diagnostic du matériel.",
+        MyApp(name: String(localized: "Boîte à outils pour Windows"), platform: "Windows",
+              summary: String(localized: "La même idée pour le PC : démarrage, services, nettoyage, réglages cachés et diagnostic du matériel."),
               icon: "wrench.and.screwdriver.fill", color: .blue,
               url: URL(string: "https://github.com/jeremdevgit/boite-a-outils/releases/latest")!),
         MyApp(name: "Ludothèque", platform: "macOS",
-              summary: "Tous vos jeux au même endroit : Steam, Epic, GOG, émulateurs… avec statistiques, succès et mode TV.",
+              summary: String(localized: "Tous vos jeux au même endroit : Steam, Epic, GOG, émulateurs… avec statistiques, succès et mode TV."),
               icon: "gamecontroller.fill", color: .purple,
               url: URL(string: "https://github.com/jeremdevgit/ludotheque/releases/latest")!),
         MyApp(name: "Pomme", platform: "Windows",
-              summary: "Lecteur de musique léger pour Apple Music et vos fichiers audio locaux.",
+              summary: String(localized: "Lecteur de musique léger pour Apple Music et vos fichiers audio locaux."),
               icon: "music.note", color: .pink,
               url: URL(string: "https://github.com/jeremdevgit/pomme/releases/latest")!),
         MyApp(name: "rJb", platform: "Windows",
-              summary: "L'éclairage RGB de tous vos périphériques et composants dans une seule application.",
+              summary: String(localized: "L'éclairage RGB de tous vos périphériques et composants dans une seule application."),
               icon: "light.max", color: .orange,
               url: URL(string: "https://github.com/jeremdevgit/rjb/releases/latest")!),
-        MyApp(name: "Suite Libre", platform: "Navigateur",
-              summary: "Six outils sans compte : QR codes, flou d'images, compression de photos, conversions, moyennes, mots de passe.",
+        MyApp(name: "Suite Libre", platform: String(localized: "Navigateur"),
+              summary: String(localized: "Six outils sans compte : QR codes, flou d'images, compression de photos, conversions, moyennes, mots de passe."),
               icon: "lock.shield.fill", color: .green,
               url: URL(string: "https://jeremdevgit.github.io/suite-libre/")!),
-        MyApp(name: "Batailles de France", platform: "Navigateur",
-              summary: "Jeu de stratégie en temps réel sur les cartes de Lyon, Paris, Marseille, Bordeaux et Strasbourg.",
+        MyApp(name: "Batailles de France", platform: String(localized: "Navigateur"),
+              summary: String(localized: "Jeu de stratégie en temps réel sur les cartes de Lyon, Paris, Marseille, Bordeaux et Strasbourg."),
               icon: "flag.2.crossed.fill", color: .red,
               url: URL(string: "https://github.com/jeremdevgit/batailles-de-france/releases/latest")!),
     ]
@@ -48,7 +48,7 @@ struct MyAppsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Mes logiciels", subtitle: "La Boîte à outils est créée par \(Author.name). Ses autres logiciels sont libres, gratuits et sans publicité.",
+            PageHeader(title: String(localized: "Mes logiciels"), subtitle: String(localized: "La Boîte à outils est créée par \(Author.name). Ses autres logiciels sont libres, gratuits et sans publicité."),
                        icon: "square.grid.2x2.fill", color: .purple) {
                 Link("Tous mes logiciels sur GitHub", destination: Author.profile).buttonStyle(.bordered)
             }

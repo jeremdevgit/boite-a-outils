@@ -16,10 +16,10 @@ struct SignatureInfo {
         switch level {
         case .apple: "Apple"
         case .developer: authority
-        case .adhoc: "Signature locale (non vérifiée)"
-        case .unsigned: "Non signé"
-        case .invalid: "Signature invalide"
-        case .missing: "Fichier introuvable"
+        case .adhoc: String(localized: "Signature locale (non vérifiée)")
+        case .unsigned: String(localized: "Non signé")
+        case .invalid: String(localized: "Signature invalide")
+        case .missing: String(localized: "Fichier introuvable")
         }
     }
     var suspicious: Bool { level == .unsigned || level == .invalid || level == .adhoc || level == .missing }
@@ -64,9 +64,9 @@ enum Persistence {
     static func scan() -> [PersistentItem] {
         var items: [PersistentItem] = []
         let home = FS.home.path
-        for (dir, cat) in [("\(home)/Library/LaunchAgents", "Agents de lancement (utilisateur)"),
-                           ("/Library/LaunchAgents", "Agents de lancement (tous)"),
-                           ("/Library/LaunchDaemons", "Services système (daemons)")] {
+        for (dir, cat) in [("\(home)/Library/LaunchAgents", String(localized: "Agents de lancement (utilisateur)")),
+                           ("/Library/LaunchAgents", String(localized: "Agents de lancement (tous)")),
+                           ("/Library/LaunchDaemons", String(localized: "Services système (daemons)"))] {
             for f in FS.children(URL(fileURLWithPath: dir)) where f.pathExtension == "plist" {
                 let d = NSDictionary(contentsOf: f) as? [String: Any]
                 let exe = (d?["Program"] as? String) ?? (d?["ProgramArguments"] as? [String])?.first ?? ""
@@ -74,15 +74,15 @@ enum Persistence {
             }
         }
         let bundleDirs: [(String, String)] = [
-            ("/Library/PrivilegedHelperTools", "Outils privilégiés"),
-            ("\(home)/Library/PreferencePanes", "Panneaux de préférences"), ("/Library/PreferencePanes", "Panneaux de préférences"),
-            ("\(home)/Library/Internet Plug-Ins", "Plug-ins Internet"), ("/Library/Internet Plug-Ins", "Plug-ins Internet"),
-            ("\(home)/Library/QuickLook", "Plug-ins Coup d'œil"), ("/Library/QuickLook", "Plug-ins Coup d'œil"),
-            ("\(home)/Library/Spotlight", "Importateurs Spotlight"), ("/Library/Spotlight", "Importateurs Spotlight"),
-            ("/Library/Audio/Plug-Ins/HAL", "Pilotes audio"), ("\(home)/Library/Screen Savers", "Économiseurs d'écran"),
-            ("/Library/Screen Savers", "Économiseurs d'écran"), ("\(home)/Library/Input Methods", "Méthodes de saisie"),
-            ("/Library/Input Methods", "Méthodes de saisie"), ("/Library/StartupItems", "Éléments de démarrage (anciens)"),
-            ("/Library/Extensions", "Extensions noyau (kext)"),
+            ("/Library/PrivilegedHelperTools", String(localized: "Outils privilégiés")),
+            ("\(home)/Library/PreferencePanes", String(localized: "Panneaux de préférences")), ("/Library/PreferencePanes", String(localized: "Panneaux de préférences")),
+            ("\(home)/Library/Internet Plug-Ins", String(localized: "Plug-ins Internet")), ("/Library/Internet Plug-Ins", String(localized: "Plug-ins Internet")),
+            ("\(home)/Library/QuickLook", String(localized: "Plug-ins Coup d'œil")), ("/Library/QuickLook", String(localized: "Plug-ins Coup d'œil")),
+            ("\(home)/Library/Spotlight", String(localized: "Importateurs Spotlight")), ("/Library/Spotlight", String(localized: "Importateurs Spotlight")),
+            ("/Library/Audio/Plug-Ins/HAL", String(localized: "Pilotes audio")), ("\(home)/Library/Screen Savers", String(localized: "Économiseurs d'écran")),
+            ("/Library/Screen Savers", String(localized: "Économiseurs d'écran")), ("\(home)/Library/Input Methods", String(localized: "Méthodes de saisie")),
+            ("/Library/Input Methods", String(localized: "Méthodes de saisie")), ("/Library/StartupItems", String(localized: "Éléments de démarrage (anciens)")),
+            ("/Library/Extensions", String(localized: "Extensions noyau (kext)")),
         ]
         for (dir, cat) in bundleDirs {
             for f in FS.children(URL(fileURLWithPath: dir)) where !f.lastPathComponent.hasPrefix(".") {
@@ -93,7 +93,7 @@ enum Persistence {
         for line in Shell.exec("/usr/bin/systemextensionsctl", ["list"]).output.components(separatedBy: "\n") where line.contains("\t") && line.contains("[") {
             let parts = line.components(separatedBy: "\t").filter { !$0.isEmpty }
             if parts.count >= 5 {
-                items.append(PersistentItem(category: "Extensions système", name: parts[parts.count - 2] + " " + parts.last!,
+                items.append(PersistentItem(category: String(localized: "Extensions système"), name: parts[parts.count - 2] + " " + parts.last!,
                                             path: parts[parts.count - 3], executable: ""))
             }
         }
@@ -101,12 +101,12 @@ enum Persistence {
         let cron = Shell.exec("/usr/bin/crontab", ["-l"])
         if cron.ok {
             for line in cron.output.components(separatedBy: "\n") where !line.hasPrefix("#") && !line.trimmingCharacters(in: .whitespaces).isEmpty {
-                items.append(PersistentItem(category: "Tâches cron", name: line, path: "", executable: ""))
+                items.append(PersistentItem(category: String(localized: "Tâches cron"), name: line, path: "", executable: ""))
             }
         }
         // Profils de configuration (MDM, VPN, restrictions…)
         for line in Shell.exec("/usr/bin/profiles", ["list"]).output.components(separatedBy: "\n") where line.contains("profileIdentifier") {
-            items.append(PersistentItem(category: "Profils de configuration", name: line.components(separatedBy: ": ").last ?? line, path: "", executable: ""))
+            items.append(PersistentItem(category: String(localized: "Profils de configuration"), name: line.components(separatedBy: ": ").last ?? line, path: "", executable: ""))
         }
         return items
     }
@@ -167,8 +167,8 @@ final class SecurityMonitor: ObservableObject {
             let path = (dir as NSString).appendingPathComponent(name)
             let sig = SignatureInfo.check(NSDictionary(contentsOfFile: path).flatMap {
                 ($0["Program"] as? String) ?? ($0["ProgramArguments"] as? [String])?.first } ?? path)
-            log("lock.trianglebadge.exclamationmark", "Nouvel élément de démarrage : \(name) — \(sig.label)", path: path)
-            notify("Nouvel élément lancé au démarrage", "\(name)\nDans \(dir)\nSignature : \(sig.label)")
+            log("lock.trianglebadge.exclamationmark", String(localized: "Nouvel élément de démarrage : \(name) — \(sig.label)"), path: path)
+            notify(String(localized: "Nouvel élément lancé au démarrage"), String(localized: "\(name)\nDans \(dir)\nSignature : \(sig.label)"))
         }
     }
 
@@ -176,13 +176,13 @@ final class SecurityMonitor: ObservableObject {
         let cam = Self.cameraInUse(), mic = Self.microphoneInUse()
         if cam != cameraOn {
             cameraOn = cam
-            log(cam ? "video.fill" : "video.slash", cam ? "Caméra activée" : "Caméra désactivée", path: nil)
-            if cam { notify("Caméra activée", "Une application utilise la caméra.") }
+            log(cam ? "video.fill" : "video.slash", cam ? String(localized: "Caméra activée") : String(localized: "Caméra désactivée"), path: nil)
+            if cam { notify(String(localized: "Caméra activée"), String(localized: "Une application utilise la caméra.")) }
         }
         if mic != micOn {
             micOn = mic
-            log(mic ? "mic.fill" : "mic.slash", mic ? "Micro activé" : "Micro désactivé", path: nil)
-            if mic { notify("Micro activé", "Une application utilise le micro.") }
+            log(mic ? "mic.fill" : "mic.slash", mic ? String(localized: "Micro activé") : String(localized: "Micro désactivé"), path: nil)
+            if mic { notify(String(localized: "Micro activé"), String(localized: "Une application utilise le micro.")) }
         }
     }
 
@@ -325,7 +325,7 @@ struct SecurityView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Sécurité", subtitle: "Ce qui se lance tout seul, ce qui vous écoute, ce qui se connecte",
+            PageHeader(title: String(localized: "Sécurité"), subtitle: String(localized: "Ce qui se lance tout seul, ce qui vous écoute, ce qui se connecte"),
                        icon: "shield.lefthalf.filled", color: .red) {
                 Picker("", selection: $tab) {
                     Text("Persistance").tag(0); Text("Surveillance").tag(1); Text("Connexions").tag(2)
@@ -462,7 +462,7 @@ struct SecurityView: View {
                         ForEach(conns) { c in
                             HStack {
                                 Text(c.proto).font(.caption.monospaced()).frame(width: 36, alignment: .leading)
-                                Text(c.remote.isEmpty ? "En écoute sur \(c.local)" : c.remote).font(.system(.callout, design: .monospaced))
+                                Text(c.remote.isEmpty ? String(localized: "En écoute sur \(c.local)") : c.remote).font(.system(.callout, design: .monospaced))
                                     .foregroundStyle(c.remote.isEmpty ? .orange : .primary).textSelection(.enabled)
                                 Spacer()
                                 Text(c.state).font(.caption).foregroundStyle(.secondary)

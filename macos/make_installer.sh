@@ -37,6 +37,15 @@ echo "→ Paquet d'installation"
 PKGROOT="build/pkgroot"
 rm -rf "$PKGROOT" && mkdir -p "$PKGROOT/Applications"
 cp -R "$APP" "$PKGROOT/Applications/"
+# pkgbuild/mkbom attend la forme Unicode décomposée du nom du paquet.
+python3 - "$PKGROOT/Applications" <<'PY_NORMALIZE'
+import pathlib, sys, unicodedata
+p = pathlib.Path(sys.argv[1]) / "Boîte à outils.app"
+t = p.with_name("BoiteAOutils-normalizing.app")
+p.rename(t)
+t.rename(p.with_name(unicodedata.normalize("NFD", p.name)))
+PY_NORMALIZE
+
 PKG="$OUT/Boite-a-outils-$VERSION.pkg"
 # Toujours installer dans /Applications (sinon macOS peut « mettre à jour » une copie trouvée ailleurs)
 pkgbuild --analyze --root "$PKGROOT" build/component.plist >/dev/null

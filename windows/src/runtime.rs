@@ -23,7 +23,7 @@ pub fn install_panic_message() {
             return;
         }
         let what = info.payload().downcast_ref::<&str>().map(|s| s.to_string()).or_else(|| info.payload().downcast_ref::<String>().cloned()).unwrap_or_default();
-        message(&format!("La Boîte à outils a rencontré un problème et doit se fermer.\n\n{what}"), MB_OK | MB_ICONERROR);
+        message(&format!("{}\n\n{what}", crate::langue::tr("La Boîte à outils a rencontré un problème et doit se fermer.")), MB_OK | MB_ICONERROR);
     }));
 }
 
@@ -56,7 +56,7 @@ pub fn ensure_webview2() -> bool {
     if webview2_installed() {
         return true;
     }
-    let ask = "La Boîte à outils a besoin de « Microsoft Edge WebView2 », un composant gratuit de Windows, absent de ce PC.\n\nLe télécharger et l'installer maintenant depuis le site de Microsoft ? Une connexion Internet est nécessaire, et cela peut prendre quelques minutes sans rien afficher.";
+    let ask = crate::langue::tr("La Boîte à outils a besoin de « Microsoft Edge WebView2 », un composant gratuit de Windows, absent de ce PC.\n\nLe télécharger et l'installer maintenant depuis le site de Microsoft ? Une connexion Internet est nécessaire, et cela peut prendre quelques minutes sans rien afficher.");
     if message(ask, MB_YESNO | MB_ICONQUESTION) != IDYES {
         return false;
     }
@@ -64,8 +64,8 @@ pub fn ensure_webview2() -> bool {
     if webview2_installed() {
         return true;
     }
-    let why = result.err().unwrap_or_else(|| "installation non terminée".into());
-    message(&format!("WebView2 n'a pas pu être installé :\n{why}\n\nLa page de téléchargement de Microsoft va s'ouvrir : installez le « Bootstrapper » ou le « Standalone Installer », puis relancez la Boîte à outils."), MB_OK | MB_ICONWARNING);
+    let why = result.err().unwrap_or_else(|| crate::langue::tr("installation non terminée").into());
+    message(&format!("{}\n{why}\n\n{}", crate::langue::tr("WebView2 n'a pas pu être installé :"), crate::langue::tr("La page de téléchargement de Microsoft va s'ouvrir : installez le « Bootstrapper » ou le « Standalone Installer », puis relancez la Boîte à outils.")), MB_OK | MB_ICONWARNING);
     crate::win::shell_open(DOWNLOAD_PAGE);
     false
 }
@@ -73,6 +73,6 @@ pub fn ensure_webview2() -> bool {
 /// Le moteur est inscrit mais refuse de démarrer (installation abîmée, dossier
 /// de données bloqué, antivirus) : explication et pistes, pas de fermeture muette.
 pub fn webview_failed(error: &dyn std::fmt::Display) {
-    message(&format!("L'interface n'a pas pu démarrer :\n{error}\n\nRéparez « Microsoft Edge WebView2 Runtime » depuis Paramètres > Applications, ou réinstallez-le depuis la page qui va s'ouvrir, puis relancez la Boîte à outils."), MB_OK | MB_ICONERROR);
+    message(&format!("{}\n{error}\n\n{}", crate::langue::tr("L'interface n'a pas pu démarrer :"), crate::langue::tr("Réparez « Microsoft Edge WebView2 Runtime » depuis Paramètres > Applications, ou réinstallez-le depuis la page qui va s'ouvrir, puis relancez la Boîte à outils.")), MB_OK | MB_ICONERROR);
     crate::win::shell_open(DOWNLOAD_PAGE);
 }

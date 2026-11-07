@@ -75,8 +75,8 @@ final class StartupModel: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async {
             let r = item.scope == .user ? Shell.sh(cmd) : Shell.admin(cmd)
             DispatchQueue.main.async {
-                self.message = r.ok ? "« \(item.label) » \(item.enabled ? "désactivé" : "réactivé")."
-                                    : "Échec : \(r.output)"
+                self.message = r.ok ? (item.enabled ? String(localized: "« \(item.label) » désactivé.") : String(localized: "« \(item.label) » réactivé."))
+                                    : String(localized: "Échec : \(r.output)")
                 self.load()
             }
         }
@@ -89,7 +89,7 @@ final class StartupModel: ObservableObject {
             DispatchQueue.main.async {
                 self.loginItems = names
                 self.loginItemsLoaded = true
-                if !r.ok { self.message = "Accès refusé à System Events : autorisez-le dans Réglages > Confidentialité > Automatisation." }
+                if !r.ok { self.message = String(localized: "Accès refusé à System Events : autorisez-le dans Réglages > Confidentialité > Automatisation.") }
             }
         }
     }
@@ -107,7 +107,7 @@ struct StartupView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Démarrage", subtitle: "Applications et services lancés automatiquement",
+            PageHeader(title: String(localized: "Démarrage"), subtitle: String(localized: "Applications et services lancés automatiquement"),
                        icon: "power", color: .green) {
                 Button { model.load(); model.loadLoginItems() } label: { Label("Actualiser", systemImage: "arrow.clockwise") }
             }

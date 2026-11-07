@@ -16,14 +16,14 @@ enum PermKind: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .fullDisk: "Accès complet au disque"
-        case .finder: "Contrôle du Finder"
-        case .systemEvents: "Contrôle de « System Events »"
-        case .accessibility: "Accessibilité"
-        case .appManagement: "Gestion des applications"
-        case .screenRecording: "Enregistrement de l'écran"
+        case .fullDisk: String(localized: "Accès complet au disque")
+        case .finder: String(localized: "Contrôle du Finder")
+        case .systemEvents: String(localized: "Contrôle de « System Events »")
+        case .accessibility: String(localized: "Accessibilité")
+        case .appManagement: String(localized: "Gestion des applications")
+        case .screenRecording: String(localized: "Enregistrement de l'écran")
         case .notifications: "Notifications"
-        case .loginItem: "Ouverture à la connexion"
+        case .loginItem: String(localized: "Ouverture à la connexion")
         }
     }
 
@@ -42,14 +42,14 @@ enum PermKind: String, CaseIterable, Identifiable {
 
     var usage: String {
         switch self {
-        case .fullDisk: "Analyse de Mail, Safari, de la corbeille et des conteneurs d'apps (Nettoyage, Confidentialité, Restes orphelins)."
-        case .finder: "Vider la corbeille, éjecter les disques, supprimer les fichiers protégés lors d'une désinstallation."
-        case .systemEvents: "Mode sombre, éléments d'ouverture, mise en sourdine."
-        case .accessibility: "Rangement des fenêtres au clavier (module Fenêtres)."
-        case .appManagement: "Désinstaller des apps et changer leur icône sans blocage de macOS."
-        case .screenRecording: "Copier le texte d'une zone de l'écran (OCR, module Utilitaires)."
-        case .notifications: "Alertes de sécurité : nouvel élément au démarrage, caméra ou micro activés."
-        case .loginItem: "Lancer la Boîte à outils au démarrage (moniteur de la barre des menus, presse-papiers)."
+        case .fullDisk: String(localized: "Analyse de Mail, Safari, de la corbeille et des conteneurs d'apps (Nettoyage, Confidentialité, Restes orphelins).")
+        case .finder: String(localized: "Vider la corbeille, éjecter les disques, supprimer les fichiers protégés lors d'une désinstallation.")
+        case .systemEvents: String(localized: "Mode sombre, éléments d'ouverture, mise en sourdine.")
+        case .accessibility: String(localized: "Rangement des fenêtres au clavier (module Fenêtres).")
+        case .appManagement: String(localized: "Désinstaller des apps et changer leur icône sans blocage de macOS.")
+        case .screenRecording: String(localized: "Copier le texte d'une zone de l'écran (OCR, module Utilitaires).")
+        case .notifications: String(localized: "Alertes de sécurité : nouvel élément au démarrage, caméra ou micro activés.")
+        case .loginItem: String(localized: "Lancer la Boîte à outils au démarrage (moniteur de la barre des menus, presse-papiers).")
         }
     }
 
@@ -84,19 +84,19 @@ enum PermKind: String, CaseIterable, Identifiable {
     var steps: [String] {
         switch self {
         case .fullDisk, .appManagement:
-            ["Le bon panneau des Réglages s'ouvre, avec la Boîte à outils affichée dans le Finder.",
-             "Activez l'interrupteur « Boîte à outils » (ou glissez l'icône depuis le Finder dans la liste).",
-             "Revenez ici : la coche verte apparaît toute seule."]
+            [String(localized: "Le bon panneau des Réglages s'ouvre, avec la Boîte à outils affichée dans le Finder."),
+             String(localized: "Activez l'interrupteur « Boîte à outils » (ou glissez l'icône depuis le Finder dans la liste)."),
+             String(localized: "Revenez ici : la coche verte apparaît toute seule.")]
         case .finder, .systemEvents:
-            ["Cliquez sur « Autoriser » dans la fenêtre que macOS affiche.",
-             "Si vous aviez refusé, activez l'interrupteur dans Réglages › Automatisation › Boîte à outils."]
+            [String(localized: "Cliquez sur « Autoriser » dans la fenêtre que macOS affiche."),
+             String(localized: "Si vous aviez refusé, activez l'interrupteur dans Réglages › Automatisation › Boîte à outils.")]
         case .accessibility, .screenRecording:
-            ["Dans la fenêtre de macOS, cliquez sur « Ouvrir Réglages Système ».",
-             "Activez l'interrupteur « Boîte à outils ». macOS peut demander de relancer l'app."]
+            [String(localized: "Dans la fenêtre de macOS, cliquez sur « Ouvrir Réglages Système »."),
+             String(localized: "Activez l'interrupteur « Boîte à outils ». macOS peut demander de relancer l'app.")]
         case .notifications:
-            ["Cliquez sur « Autoriser » dans la fenêtre de macOS (ou activez-les dans Réglages › Notifications)."]
+            [String(localized: "Cliquez sur « Autoriser » dans la fenêtre de macOS (ou activez-les dans Réglages › Notifications).")]
         case .loginItem:
-            ["Un clic suffit. Si macOS le demande, validez dans Réglages › Ouverture."]
+            [String(localized: "Un clic suffit. Si macOS le demande, validez dans Réglages › Ouverture.")]
         }
     }
 }
@@ -336,7 +336,7 @@ struct PermissionsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                PageHeader(title: "Autorisations", subtitle: "Ce que macOS doit autoriser pour que chaque outil fonctionne",
+                PageHeader(title: String(localized: "Autorisations"), subtitle: String(localized: "Ce que macOS doit autoriser pour que chaque outil fonctionne"),
                            icon: "lock.shield.fill", color: .green) {
                     if center.checking { ProgressView().controlSize(.small) }
                     Button { center.refresh(full: true) } label: { Label("Revérifier", systemImage: "arrow.clockwise") }
@@ -358,7 +358,7 @@ struct PermissionsView: View {
 
                     ForEach(PermKind.allCases) { k in row(k) }
 
-                    Card(title: "L'interrupteur est activé mais l'app ne le voit pas ?", icon: "questionmark.circle") {
+                    Card(title: String(localized: "L'interrupteur est activé mais l'app ne le voit pas ?"), icon: "questionmark.circle") {
                         Text("Après une réinstallation ou une mise à jour, macOS peut garder une ancienne autorisation qui ne correspond plus à l'app. Cliquez sur « Réinitialiser » sur la ligne concernée puis réactivez l'interrupteur. Pour l'accès complet au disque, relancer l'app peut aussi être nécessaire.")
                             .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         Button("Relancer la Boîte à outils") { center.relaunch() }
@@ -436,10 +436,10 @@ struct PermissionsView: View {
 
     private func badge(_ s: PermState, _ k: PermKind) -> some View {
         let (text, color, icon): (String, Color, String) = switch s {
-        case .granted: ("Accordée", .green, "checkmark.circle.fill")
-        case .denied: (k == .loginItem ? "Désactivée" : "Non accordée", k.recommended ? .orange : .secondary, "xmark.circle.fill")
-        case .notDetermined: (k == .loginItem ? "À valider" : "Jamais demandée", .orange, "questionmark.circle.fill")
-        case .unknown: (k == .appManagement ? "À tester" : "Indéterminée", .secondary, "minus.circle")
+        case .granted: (String(localized: "Accordée"), .green, "checkmark.circle.fill")
+        case .denied: (k == .loginItem ? String(localized: "Désactivée") : String(localized: "Non accordée"), k.recommended ? .orange : .secondary, "xmark.circle.fill")
+        case .notDetermined: (k == .loginItem ? String(localized: "À valider") : String(localized: "Jamais demandée"), .orange, "questionmark.circle.fill")
+        case .unknown: (k == .appManagement ? String(localized: "À tester") : String(localized: "Indéterminée"), .secondary, "minus.circle")
         }
         return Label(text, systemImage: icon).foregroundStyle(color).font(.callout.bold())
     }

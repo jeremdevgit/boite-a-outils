@@ -40,7 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     static func showAbout() {
-        var credits = "Entretien, diagnostic et personnalisation du Mac.\nAucune donnée n'est envoyée : tout est analysé localement.\n\nCréé par \(Author.name) — github.com/\(Author.name)\nLogiciel libre sous licence GPL-3.0-or-later."
+        var credits = String(localized: "Entretien, diagnostic et personnalisation du Mac.\nAucune donnée n'est envoyée : tout est analysé localement.\n\nCréé par \(Author.name) — github.com/\(Author.name)\nLogiciel libre sous licence GPL-3.0-or-later.")
         if let url = Bundle.main.url(forResource: "Licences", withExtension: "txt"),
            let text = try? String(contentsOf: url, encoding: .utf8) {
             credits += "\n\n" + text
@@ -58,7 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 enum Tool: String, CaseIterable, Identifiable, Hashable {
-    case dashboard, permissions, cleaner, privacy, space, largeFiles, duplicates, devPurge
+    case fileSearch, dashboard, permissions, cleaner, privacy, space, largeFiles, duplicates, devPurge
     case uninstaller, orphans, startup, processes, maintenance, tweaks, updates, history
     case toggles, customize, windows, clipboard, network
     case battery, ports, sensors, disks, displays, security, utilities
@@ -68,35 +68,36 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .dashboard: "Tableau de bord"
-        case .permissions: "Autorisations"
-        case .cleaner: "Nettoyage système"
-        case .privacy: "Confidentialité"
-        case .space: "Espace disque"
-        case .largeFiles: "Gros fichiers"
-        case .duplicates: "Doublons"
-        case .devPurge: "Projets de dev"
-        case .uninstaller: "Désinstallateur"
-        case .orphans: "Restes orphelins"
-        case .startup: "Démarrage"
-        case .processes: "Processus"
-        case .maintenance: "Maintenance"
-        case .tweaks: "Réglages cachés"
-        case .updates: "Mises à jour"
-        case .history: "Historique"
-        case .toggles: "Interrupteurs"
-        case .customize: "Personnalisation"
-        case .windows: "Fenêtres"
-        case .clipboard: "Presse-papiers"
-        case .network: "Réseau"
-        case .battery: "Batterie"
-        case .ports: "Câbles & ports"
-        case .sensors: "Capteurs"
-        case .disks: "Disques"
-        case .displays: "Écrans"
-        case .security: "Sécurité"
-        case .utilities: "Utilitaires"
-        case .myApps: "Mes logiciels"
+        case .dashboard: String(localized: "Tableau de bord")
+        case .permissions: String(localized: "Autorisations")
+        case .cleaner: String(localized: "Nettoyage système")
+        case .privacy: String(localized: "Confidentialité")
+        case .space: String(localized: "Espace disque")
+        case .fileSearch: String(localized: "Recherche de fichiers")
+        case .largeFiles: String(localized: "Gros fichiers")
+        case .duplicates: String(localized: "Doublons")
+        case .devPurge: String(localized: "Projets de dev")
+        case .uninstaller: String(localized: "Désinstallateur")
+        case .orphans: String(localized: "Restes orphelins")
+        case .startup: String(localized: "Démarrage")
+        case .processes: String(localized: "Processus")
+        case .maintenance: String(localized: "Maintenance")
+        case .tweaks: String(localized: "Réglages cachés")
+        case .updates: String(localized: "Mises à jour")
+        case .history: String(localized: "Historique")
+        case .toggles: String(localized: "Interrupteurs")
+        case .customize: String(localized: "Personnalisation")
+        case .windows: String(localized: "Fenêtres")
+        case .clipboard: String(localized: "Presse-papiers")
+        case .network: String(localized: "Réseau")
+        case .battery: String(localized: "Batterie")
+        case .ports: String(localized: "Câbles & ports")
+        case .sensors: String(localized: "Capteurs")
+        case .disks: String(localized: "Disques")
+        case .displays: String(localized: "Écrans")
+        case .security: String(localized: "Sécurité")
+        case .utilities: String(localized: "Utilitaires")
+        case .myApps: String(localized: "Mes logiciels")
         }
     }
 
@@ -107,6 +108,7 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         case .cleaner: "sparkles"
         case .privacy: "hand.raised.fill"
         case .space: "chart.pie.fill"
+        case .fileSearch: "magnifyingglass"
         case .largeFiles: "doc.zipper"
         case .duplicates: "square.on.square"
         case .devPurge: "curlybraces.square.fill"
@@ -141,6 +143,7 @@ enum Tool: String, CaseIterable, Identifiable, Hashable {
         case .cleaner: .pink
         case .privacy: .blue
         case .space: .indigo
+        case .fileSearch: .blue
         case .largeFiles: .orange
         case .duplicates: .teal
         case .devPurge: .mint
@@ -176,6 +179,7 @@ struct ContentView: View {
     @StateObject private var cleaner = CleanerModel()
     @StateObject private var privacy = PrivacyModel()
     @StateObject private var space = SpaceModel()
+    @StateObject private var fileSearch = FileSearchModel()
     @StateObject private var large = LargeFilesModel()
     @StateObject private var dups = DuplicatesModel()
     @StateObject private var dev = DevPurgeModel()
@@ -202,7 +206,7 @@ struct ContentView: View {
         NavigationSplitView {
             List(selection: $selection) {
                 Section("Aperçu") {
-                    row(.dashboard)
+                    row(.dashboard); row(.fileSearch)
                     row(.permissions)
                 }
                 Section("Nettoyage") {
@@ -241,6 +245,7 @@ struct ContentView: View {
         case .cleaner: CleanerView(model: cleaner)
         case .privacy: PrivacyView(model: privacy)
         case .space: SpaceView(model: space)
+        case .fileSearch: FileSearchView(model: fileSearch)
         case .largeFiles: LargeFilesView(model: large)
         case .duplicates: DuplicatesView(model: dups)
         case .devPurge: DevPurgeView(model: dev)

@@ -81,7 +81,7 @@ struct SpaceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Espace disque", subtitle: "Visualisez ce qui occupe de la place, dossier par dossier",
+            PageHeader(title: String(localized: "Espace disque"), subtitle: String(localized: "Visualisez ce qui occupe de la place, dossier par dossier"),
                        icon: "chart.pie.fill", color: .indigo) {
                 Menu("Emplacement") {
                     Button("Dossier personnel") { model.setRoot(FS.home) }

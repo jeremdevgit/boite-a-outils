@@ -35,7 +35,7 @@ final class OrphansModel: ObservableObject {
         scanning = true
         message = nil
         DispatchQueue.global(qos: .userInitiated).async {
-            DispatchQueue.main.async { self.status = "Inventaire des applications installées…" }
+            DispatchQueue.main.async { self.status = String(localized: "Inventaire des applications installées…") }
             let ids = Self.installedBundleIDs()
             let vendors = Set(ids.map(Self.vendor))
             let ignored = IgnoreList.get("orphans")
@@ -43,7 +43,7 @@ final class OrphansModel: ObservableObject {
 
             var found: [OrphanItem] = []
             for d in Self.dirs {
-                DispatchQueue.main.async { self.status = "Analyse de ~/Library/\(d)…" }
+                DispatchQueue.main.async { self.status = String(localized: "Analyse de ~/Library/\(d)…") }
                 for f in FS.children(FS.home.appendingPathComponent("Library/\(d)")) where !ignored.contains(f.path) {
                     var name = f.lastPathComponent
                     for s in Self.suffixes where name.hasSuffix(s) { name = String(name.dropLast(s.count)) }
@@ -98,7 +98,7 @@ final class OrphansModel: ObservableObject {
         let failed = Set(FS.trash(selected.map(\.url), adminFallback: false))
         let count = selected.count - failed.count
         items.removeAll { $0.selected && !failed.contains($0.url) }
-        message = "\(count) élément(s) placés dans la corbeille." + (failed.isEmpty ? "" : " \(failed.count) échec(s).")
+        message = String(localized: "\(count) élément(s) placés dans la corbeille.") + (failed.isEmpty ? "" : String(localized: " \(failed.count) échec(s)."))
     }
 }
 
@@ -108,7 +108,7 @@ struct OrphansView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Restes orphelins", subtitle: "Fichiers laissés par des applications déjà supprimées",
+            PageHeader(title: String(localized: "Restes orphelins"), subtitle: String(localized: "Fichiers laissés par des applications déjà supprimées"),
                        icon: "puzzlepiece.extension.fill", color: .brown) {
                 if model.scannedOnce && !model.scanning {
                     Button { model.scan() } label: { Label("Réanalyser", systemImage: "arrow.clockwise") }
@@ -124,11 +124,11 @@ struct OrphansView: View {
                 VStack(spacing: 10) { ProgressView(); Text(model.status).foregroundStyle(.secondary) }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !model.scannedOnce {
-                EmptyState(icon: "puzzlepiece.extension", title: "Rechercher les restes orphelins",
-                           message: "Compare les préférences, caches et conteneurs de votre Bibliothèque avec les applications réellement installées.",
-                           actionTitle: "Analyser") { model.scan() }
+                EmptyState(icon: "puzzlepiece.extension", title: String(localized: "Rechercher les restes orphelins"),
+                           message: String(localized: "Compare les préférences, caches et conteneurs de votre Bibliothèque avec les applications réellement installées."),
+                           actionTitle: String(localized: "Analyser")) { model.scan() }
             } else if model.items.isEmpty {
-                EmptyState(icon: "checkmark.seal", title: "Aucun reste trouvé", message: "Aucun fichier d'application désinstallée détecté.")
+                EmptyState(icon: "checkmark.seal", title: String(localized: "Aucun reste trouvé"), message: String(localized: "Aucun fichier d'application désinstallée détecté."))
             } else {
                 List($model.items) { $item in
                     HStack(spacing: 10) {
@@ -161,6 +161,8 @@ struct OrphansView: View {
                         Text("Les éléments d'un éditeur encore présent ne sont pas cochés par défaut.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
+                    Button("Tout sélectionner") { for i in model.items.indices { model.items[i].selected = true } }
+                    Button("Tout désélectionner") { for i in model.items.indices { model.items[i].selected = false } }
                     Spacer()
                     if !IgnoreList.get("orphans").isEmpty {
                         Button("Réinitialiser les exclusions") { IgnoreList.reset("orphans"); model.scan() }

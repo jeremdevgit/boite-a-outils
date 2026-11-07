@@ -75,3 +75,7 @@ voir `Resources/Licences.txt`, aussi affiché dans « À propos ».
 Nécessite uniquement les Command Line Tools (`xcode-select --install`).
 
 Pour une analyse complète : Réglages Système › Confidentialité et sécurité › Accès complet au disque › ajouter « Boîte à outils ».
+
+## Recherche de fichiers (1.6)
+
+Un nouvel onglet retrouve fichiers et dossiers par nom ou chemin complet, avec jokers, filtres type/taille/date, tri, affichage dans le Finder et copie du chemin. Choisissez un dossier, ou Tout l’ordinateur, puis construisez l’index local en mémoire. La première analyse est progressive et annulable ; les dossiers inaccessibles et les liens sont ignorés. Reconstruisez l’index pour inclure les changements du disque.

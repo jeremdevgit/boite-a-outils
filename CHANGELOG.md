@@ -1,5 +1,23 @@
 # Historique des versions
 
+## Windows 2.3.0 et macOS 1.6 — 2026-11-07
+
+- Interface en huit langues : français, anglais, espagnol, allemand, italien, portugais, chinois simplifié et japonais ; choix automatique et sélecteur de langue.
+- Nouvel onglet de recherche de fichiers et dossiers sur Windows/macOS : index local en mémoire, jokers, recherche dans le chemin, filtres taille/date/type, tri et copie du chemin.
+- Windows : filtres de statut ou de taille dans Démarrage, Services, Processus, Applications, Sysinternals et Historique ; filtres par taille pour les installateurs et archives oubliés, sélection et désélection groupées dans les listes utiles. Les éléments masqués par un filtre sont décochés.
+- macOS : sélection et désélection groupées dans Nettoyage, Gros fichiers et Restes d'applications.
+- Traduction Windows : les valeurs dynamiques restent des nœuds texte, sans interprétation HTML.
+- README en anglais, français et espagnol ; captures anglaises réalisées avec des données de démonstration.
+
+### English
+
+- Interface in eight languages: French, English, Spanish, German, Italian, Portuguese, Simplified Chinese and Japanese, with automatic detection and a language selector.
+- New file/folder search tab on Windows/macOS: session-local index, wildcards, full-path matching, type/size/date filters, sorting and path copying.
+- Windows: contextual filters in Startup, Services, Processes, Apps, Sysinternals and History; size filters for forgotten installers and archives, and bulk selection in relevant lists. Filtering clears hidden selections.
+- macOS: select/deselect all in Cleanup, Large files and App leftovers.
+- Windows translation: dynamic values stay in text nodes and are never interpreted as HTML.
+- English, French and Spanish READMEs; English screenshots use demonstration data.
+
 ## Windows 2.2.0 et macOS 1.5 — 2026-11-05 — Publication open source
 
 - Code publié sous licence GNU GPL v3 ou ultérieure.

@@ -43,7 +43,7 @@ final class KeepAwake: ObservableObject {
     @Published var allowDisplaySleep = false
     private var process: Process?
 
-    static let durations: [(String, Int?)] = [("15 min", 15), ("30 min", 30), ("1 h", 60), ("2 h", 120), ("5 h", 300), ("Indéfiniment", nil)]
+    static let durations: [(String, Int?)] = [("15 min", 15), ("30 min", 30), ("1 h", 60), ("2 h", 120), ("5 h", 300), (String(localized: "Indéfiniment"), nil)]
 
     func start(minutes: Int?) {
         stop()
@@ -95,32 +95,32 @@ final class QuickTogglesModel: ObservableObject {
     let toggles: [QuickToggle] = {
         let wifi = Mac.wifiDevice
         var list = [
-            QuickToggle(id: "dark", title: "Mode sombre", icon: "moon.fill", detail: "Bascule l'apparence de macOS.",
+            QuickToggle(id: "dark", title: String(localized: "Mode sombre"), icon: "moon.fill", detail: String(localized: "Bascule l'apparence de macOS."),
                         read: { Mac.isDark }, write: { Mac.setDark($0) }),
-            QuickToggle(id: "desktop", title: "Masquer les icônes du bureau", icon: "menubar.dock.rectangle",
-                        detail: "Idéal pour une présentation ou un partage d'écran.",
+            QuickToggle(id: "desktop", title: String(localized: "Masquer les icônes du bureau"), icon: "menubar.dock.rectangle",
+                        detail: String(localized: "Idéal pour une présentation ou un partage d'écran."),
                         read: { Mac.readDefault("com.apple.finder", "CreateDesktop") == "0" },
                         write: { on in
                             if on { Shell.exec("/usr/bin/defaults", ["write", "com.apple.finder", "CreateDesktop", "-bool", "false"]) }
                             else { Shell.exec("/usr/bin/defaults", ["delete", "com.apple.finder", "CreateDesktop"]) }
                             Mac.killall("Finder")
                         }),
-            QuickToggle(id: "hidden", title: "Afficher les fichiers cachés", icon: "eye", detail: "Dans toutes les fenêtres du Finder.",
+            QuickToggle(id: "hidden", title: String(localized: "Afficher les fichiers cachés"), icon: "eye", detail: String(localized: "Dans toutes les fenêtres du Finder."),
                         read: { Mac.readDefault("com.apple.finder", "AppleShowAllFiles") == "1" },
                         write: { on in
                             Shell.exec("/usr/bin/defaults", ["write", "com.apple.finder", "AppleShowAllFiles", "-bool", on ? "true" : "false"])
                             Mac.killall("Finder")
                         }),
-            QuickToggle(id: "mute", title: "Couper le son", icon: "speaker.slash.fill", detail: "Sortie audio principale.",
+            QuickToggle(id: "mute", title: String(localized: "Couper le son"), icon: "speaker.slash.fill", detail: String(localized: "Sortie audio principale."),
                         read: { Shell.appleScript("output muted of (get volume settings)").output == "true" },
                         write: { Shell.appleScript("set volume output muted \($0)") }),
-            QuickToggle(id: "lowpower", title: "Mode économie d'énergie", icon: "leaf.fill",
-                        detail: "Réduit la consommation (mot de passe administrateur).",
+            QuickToggle(id: "lowpower", title: String(localized: "Mode économie d'énergie"), icon: "leaf.fill",
+                        detail: String(localized: "Réduit la consommation (mot de passe administrateur)."),
                         read: { Shell.exec("/usr/bin/pmset", ["-g"]).output.range(of: #"lowpowermode\s+1"#, options: .regularExpression) != nil },
                         write: { Shell.admin("pmset -a lowpowermode \($0 ? 1 : 0)") }),
         ]
         if let wifi {
-            list.insert(QuickToggle(id: "wifi", title: "Wi-Fi", icon: "wifi", detail: "Active ou coupe le Wi-Fi (\(wifi)).",
+            list.insert(QuickToggle(id: "wifi", title: "Wi-Fi", icon: "wifi", detail: String(localized: "Active ou coupe le Wi-Fi (\(wifi))."),
                                     read: { Shell.exec("/usr/sbin/networksetup", ["-getairportpower", wifi]).output.hasSuffix("On") },
                                     write: { Shell.exec("/usr/sbin/networksetup", ["-setairportpower", wifi, $0 ? "on" : "off"]) }), at: 3)
         }
@@ -151,7 +151,7 @@ final class QuickTogglesModel: ObservableObject {
     func action(_ title: String, _ work: @escaping () -> ShellResult) {
         DispatchQueue.global(qos: .userInitiated).async {
             let r = work()
-            DispatchQueue.main.async { self.message = r.ok ? "\(title) : fait." : "\(title) : échec. \(r.output)" }
+            DispatchQueue.main.async { self.message = r.ok ? String(localized: "\(title) : fait.") : String(localized: "\(title) : échec. \(r.output)") }
         }
     }
 }
@@ -163,13 +163,13 @@ struct QuickTogglesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageHeader(title: "Interrupteurs", subtitle: "Les réglages du quotidien, en un clic",
+                PageHeader(title: String(localized: "Interrupteurs"), subtitle: String(localized: "Les réglages du quotidien, en un clic"),
                            icon: "switch.2", color: .orange) {
                     Button { model.refresh() } label: { Label("Actualiser", systemImage: "arrow.clockwise") }
                 }
 
                 Group {
-                    Card(title: "Garder le Mac éveillé", icon: "cup.and.saucer.fill") {
+                    Card(title: String(localized: "Garder le Mac éveillé"), icon: "cup.and.saucer.fill") {
                         HStack {
                             if awake.active {
                                 Image(systemName: "cup.and.saucer.fill").foregroundStyle(.orange)
@@ -213,22 +213,22 @@ struct QuickTogglesView: View {
                         }
                     }
 
-                    Card(title: "Actions rapides", icon: "bolt.fill") {
+                    Card(title: String(localized: "Actions rapides"), icon: "bolt.fill") {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 10)], spacing: 10) {
-                            actionButton("Éteindre l'écran (verrouille)", "display") {
+                            actionButton(String(localized: "Éteindre l'écran (verrouille)"), "display") {
                                 Shell.exec("/usr/bin/pmset", ["displaysleepnow"])
                             }
-                            actionButton("Économiseur d'écran", "sparkles.tv") {
+                            actionButton(String(localized: "Économiseur d'écran"), "sparkles.tv") {
                                 Shell.exec("/usr/bin/open", ["-a", "ScreenSaverEngine"])
                             }
-                            actionButton("Éjecter tous les disques", "eject.fill") {
+                            actionButton(String(localized: "Éjecter tous les disques"), "eject.fill") {
                                 Shell.appleScript("tell application \"Finder\" to eject (every disk whose ejectable is true)")
                             }
-                            actionButton("Vider la corbeille", "trash") {
+                            actionButton(String(localized: "Vider la corbeille"), "trash") {
                                 Shell.appleScript("tell application \"Finder\" to empty trash")
                             }
-                            actionButton("Relancer le Finder", "arrow.clockwise") { Shell.exec("/usr/bin/killall", ["Finder"]) }
-                            actionButton("Relancer le Dock", "dock.rectangle") { Shell.exec("/usr/bin/killall", ["Dock"]) }
+                            actionButton(String(localized: "Relancer le Finder"), "arrow.clockwise") { Shell.exec("/usr/bin/killall", ["Finder"]) }
+                            actionButton(String(localized: "Relancer le Dock"), "dock.rectangle") { Shell.exec("/usr/bin/killall", ["Dock"]) }
                         }
                         if let m = model.message { Text(m).font(.callout).foregroundStyle(.secondary) }
                     }

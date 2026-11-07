@@ -1,6 +1,6 @@
 [package]
 name = "boite-a-outils"
-version = "2.2.0"
+version = "2.3.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 description = "Boîte à outils : démarrage, services, nettoyage et entretien de Windows, sans rien casser"

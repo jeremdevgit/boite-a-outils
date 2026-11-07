@@ -65,7 +65,7 @@ struct LargeFilesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Gros fichiers", subtitle: "Retrouvez les fichiers volumineux et anciens oubliés",
+            PageHeader(title: String(localized: "Gros fichiers"), subtitle: String(localized: "Retrouvez les fichiers volumineux et anciens oubliés"),
                        icon: "doc.zipper", color: .orange)
 
             HStack(spacing: 14) {
@@ -94,17 +94,19 @@ struct LargeFilesView: View {
                     Text("\(model.scannedCount) fichiers examinés…").foregroundStyle(.secondary).monospacedDigit()
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if !model.scannedOnce {
-                EmptyState(icon: "doc.zipper", title: "Rechercher les gros fichiers",
-                           message: "Choisissez un dossier et une taille minimale. Les fichiers supprimés vont à la corbeille.",
-                           actionTitle: "Rechercher") { model.scan() }
+                EmptyState(icon: "doc.zipper", title: String(localized: "Rechercher les gros fichiers"),
+                           message: String(localized: "Choisissez un dossier et une taille minimale. Les fichiers supprimés vont à la corbeille."),
+                           actionTitle: String(localized: "Rechercher")) { model.scan() }
             } else if model.results.isEmpty {
-                EmptyState(icon: "checkmark.seal", title: "Aucun fichier trouvé",
-                           message: "Aucun fichier ne correspond aux critères (\(model.scannedCount) fichiers examinés).")
+                EmptyState(icon: "checkmark.seal", title: String(localized: "Aucun fichier trouvé"),
+                           message: String(localized: "Aucun fichier ne correspond aux critères (\(model.scannedCount) fichiers examinés)."))
             } else {
                 List { ForEach($model.results) { $f in FileRow(file: $f) } }
                     .listStyle(.inset(alternatesRowBackgrounds: true))
                 BottomBar {
                     Text("\(model.results.count) fichiers · sélection : \(formatBytes(model.selectedSize))").font(.headline)
+                    Button("Tout sélectionner") { for i in model.results.indices { model.results[i].selected = true } }
+                    Button("Tout désélectionner") { for i in model.results.indices { model.results[i].selected = false } }
                     Spacer()
                     Button("Afficher dans le Finder") { FS.reveal(model.selected.map(\.url)) }.disabled(model.selected.isEmpty)
                     Button("Mettre à la corbeille") { confirm = true }

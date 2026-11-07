@@ -11,3 +11,6 @@ macos/build/
 macos/dist/
 windows/target/
 windows/dist/
+
+# Rapport local de contrôle des captures de démonstration
+captures/en/controle.json

@@ -21,14 +21,14 @@ final class CustomizeModel: ObservableObject {
     @Published var message: String?
 
     static let accents: [(value: Int, name: String, color: Color)] = [
-        (-2, "Multicolore", .gray), (4, "Bleu", .blue), (5, "Violet", .purple), (6, "Rose", .pink), (0, "Rouge", .red),
-        (1, "Orange", .orange), (2, "Jaune", .yellow), (3, "Vert", .green), (-1, "Graphite", Color(white: 0.55)),
+        (-2, String(localized: "Multicolore"), .gray), (4, String(localized: "Bleu"), .blue), (5, String(localized: "Violet"), .purple), (6, String(localized: "Rose"), .pink), (0, String(localized: "Rouge"), .red),
+        (1, String(localized: "Orange"), .orange), (2, String(localized: "Jaune"), .yellow), (3, String(localized: "Vert"), .green), (-1, String(localized: "Graphite"), Color(white: 0.55)),
     ]
 
     static let cornerActions: [(Int, String)] = [
-        (1, "—"), (2, "Mission Control"), (3, "Fenêtres de l'app"), (4, "Bureau"), (11, "Launchpad"),
-        (12, "Centre de notifications"), (5, "Économiseur d'écran"), (6, "Désactiver l'économiseur"),
-        (10, "Suspendre l'écran"), (13, "Verrouiller l'écran"), (14, "Note rapide"),
+        (1, "—"), (2, "Mission Control"), (3, String(localized: "Fenêtres de l'app")), (4, String(localized: "Bureau")), (11, "Launchpad"),
+        (12, String(localized: "Centre de notifications")), (5, String(localized: "Économiseur d'écran")), (6, String(localized: "Désactiver l'économiseur")),
+        (10, String(localized: "Suspendre l'écran")), (13, String(localized: "Verrouiller l'écran")), (14, String(localized: "Note rapide")),
     ]
     static let cornerKeys = ["wvous-tl-corner", "wvous-tr-corner", "wvous-bl-corner", "wvous-br-corner"]
 
@@ -108,9 +108,9 @@ final class CustomizeModel: ObservableObject {
         do {
             for s in NSScreen.screens { try NSWorkspace.shared.setDesktopImageURL(url, for: s, options: [:]) }
             wallpaper = url
-            message = "Fond d'écran appliqué à tous les écrans."
+            message = String(localized: "Fond d'écran appliqué à tous les écrans.")
         } catch {
-            message = "Impossible d'appliquer ce fond d'écran : \(error.localizedDescription)"
+            message = String(localized: "Impossible d'appliquer ce fond d'écran : \(error.localizedDescription)")
         }
     }
 
@@ -133,7 +133,7 @@ final class CustomizeModel: ObservableObject {
             Shell.exec("/usr/bin/defaults", ["write", "com.apple.dock", "persistent-apps", "-array-add",
                                              "{\"tile-type\"=\"\(small ? "small-spacer-tile" : "spacer-tile")\";}"])
             Mac.killall("Dock")
-            self.say("Séparateur ajouté à la fin des apps du Dock. Faites-le glisser où vous voulez, ou hors du Dock pour le retirer.")
+            self.say(String(localized: "Séparateur ajouté à la fin des apps du Dock. Faites-le glisser où vous voulez, ou hors du Dock pour le retirer."))
         }
     }
 
@@ -162,7 +162,7 @@ final class CustomizeModel: ObservableObject {
             }
             Mac.killall("SystemUIServer")
             Mac.killall("ControlCenter")
-            self.say("Espacement appliqué. Si rien ne change, fermez puis rouvrez votre session.")
+            self.say(String(localized: "Espacement appliqué. Si rien ne change, fermez puis rouvrez votre session."))
         }
     }
 
@@ -173,7 +173,7 @@ final class CustomizeModel: ObservableObject {
             let path = "/Library/Preferences/com.apple.loginwindow"
             let cmd = text.map { "defaults write \(path) LoginwindowText \(Shell.quote($0))" } ?? "defaults delete \(path) LoginwindowText"
             let r = Shell.admin(cmd)
-            self.say(r.ok ? (text == nil ? "Message retiré." : "Message affiché sur l'écran de verrouillage.") : "Annulé.")
+            self.say(r.ok ? (text == nil ? String(localized: "Message retiré.") : String(localized: "Message affiché sur l'écran de verrouillage.")) : String(localized: "Annulé."))
             if text == nil && r.ok { DispatchQueue.main.async { self.loginMessage = "" } }
         }
     }
@@ -182,7 +182,7 @@ final class CustomizeModel: ObservableObject {
         startupChime = on
         background {
             let r = Shell.admin("nvram StartupMute=\(on ? "%00" : "%01")")
-            self.say(r.ok ? "Son de démarrage \(on ? "activé" : "désactivé") (effectif au prochain démarrage)." : "Annulé.")
+            self.say(r.ok ? (on ? String(localized: "Son de démarrage activé (effectif au prochain démarrage).") : String(localized: "Son de démarrage désactivé (effectif au prochain démarrage).")) : String(localized: "Annulé."))
             if !r.ok { DispatchQueue.main.async { self.startupChime = !on } }
         }
     }
@@ -195,7 +195,7 @@ final class CustomizeModel: ObservableObject {
             .filter { $0.isLetter || $0.isNumber || $0 == "-" }
         background {
             let r = Shell.admin("scutil --set ComputerName \(Shell.quote(trimmed)) && scutil --set LocalHostName \(Shell.quote(host)) && scutil --set HostName \(Shell.quote(host))")
-            self.say(r.ok ? "Le Mac s'appelle désormais « \(trimmed) » (\(host).local)." : "Annulé.")
+            self.say(r.ok ? String(localized: "Le Mac s'appelle désormais « \(trimmed) » (\(host).local).") : String(localized: "Annulé."))
         }
     }
 
@@ -205,23 +205,23 @@ final class CustomizeModel: ObservableObject {
         let appPanel = NSOpenPanel()
         appPanel.allowedContentTypes = [.application]
         appPanel.directoryURL = URL(fileURLWithPath: "/Applications")
-        appPanel.prompt = "Choisir l'app"
+        appPanel.prompt = String(localized: "Choisir l'app")
         guard appPanel.runModal() == .OK, let app = appPanel.url else { return }
         var image: NSImage?
         if !reset {
             let imgPanel = NSOpenPanel()
             imgPanel.allowedContentTypes = [.image, .icns]
-            imgPanel.prompt = "Choisir l'icône"
+            imgPanel.prompt = String(localized: "Choisir l'icône")
             guard imgPanel.runModal() == .OK, let u = imgPanel.url, let img = NSImage(contentsOf: u) else { return }
             image = img
         }
         if NSWorkspace.shared.setIcon(image, forFile: app.path, options: []) {
             Shell.exec("/usr/bin/touch", [app.path])
             Mac.killall("Dock")
-            message = reset ? "Icône d'origine restaurée pour \(app.deletingPathExtension().lastPathComponent)."
-                            : "Nouvelle icône appliquée à \(app.deletingPathExtension().lastPathComponent)."
+            message = reset ? String(localized: "Icône d'origine restaurée pour \(app.deletingPathExtension().lastPathComponent).")
+                            : String(localized: "Nouvelle icône appliquée à \(app.deletingPathExtension().lastPathComponent).")
         } else {
-            message = "Impossible de modifier cette app (app système ou protégée)."
+            message = String(localized: "Impossible de modifier cette app (app système ou protégée).")
         }
     }
 }
@@ -233,7 +233,7 @@ struct CustomizeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Personnalisation", subtitle: "Apparence, Dock, coins actifs, démarrage…",
+            PageHeader(title: String(localized: "Personnalisation"), subtitle: String(localized: "Apparence, Dock, coins actifs, démarrage…"),
                        icon: "paintbrush.fill", color: .pink)
             if let m = model.message {
                 Label(m, systemImage: "info.circle").font(.callout).foregroundStyle(.secondary)
@@ -296,8 +296,8 @@ struct CustomizeView: View {
 
                 Section("Coins actifs") {
                     Grid(horizontalSpacing: 16, verticalSpacing: 10) {
-                        GridRow { cornerPicker(0, "↖︎ Haut gauche"); cornerPicker(1, "↗︎ Haut droit") }
-                        GridRow { cornerPicker(2, "↙︎ Bas gauche"); cornerPicker(3, "↘︎ Bas droit") }
+                        GridRow { cornerPicker(0, String(localized: "↖︎ Haut gauche")); cornerPicker(1, String(localized: "↗︎ Haut droit")) }
+                        GridRow { cornerPicker(2, String(localized: "↙︎ Bas gauche")); cornerPicker(3, String(localized: "↘︎ Bas droit")) }
                     }
                 }
 

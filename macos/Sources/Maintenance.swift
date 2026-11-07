@@ -11,46 +11,46 @@ struct MaintTask: Identifiable {
     var selected = false
 
     static let all: [MaintTask] = [
-        MaintTask(id: "dns", title: "Vider le cache DNS",
-                  detail: "Corrige les sites qui ne se chargent plus ou les problèmes de réseau.",
+        MaintTask(id: "dns", title: String(localized: "Vider le cache DNS"),
+                  detail: String(localized: "Corrige les sites qui ne se chargent plus ou les problèmes de réseau."),
                   icon: "network", admin: true, command: "dscacheutil -flushcache; killall -HUP mDNSResponder"),
-        MaintTask(id: "ram", title: "Libérer la mémoire inactive",
-                  detail: "Purge la mémoire inactive et les caches disque.",
+        MaintTask(id: "ram", title: String(localized: "Libérer la mémoire inactive"),
+                  detail: String(localized: "Purge la mémoire inactive et les caches disque."),
                   icon: "memorychip", admin: true, command: "purge"),
-        MaintTask(id: "snapshots", title: "Supprimer les instantanés Time Machine locaux",
-                  detail: "Récupère l'espace « purgeable » occupé par les instantanés.",
+        MaintTask(id: "snapshots", title: String(localized: "Supprimer les instantanés Time Machine locaux"),
+                  detail: String(localized: "Récupère l'espace « purgeable » occupé par les instantanés."),
                   icon: "clock.arrow.circlepath", admin: true,
                   command: "tmutil listlocalsnapshots /; tmutil thinlocalsnapshots / 999999999999 4"),
-        MaintTask(id: "spotlight", title: "Réindexer Spotlight",
-                  detail: "Reconstruit l'index de recherche (résultats manquants, « mds » gourmand). Long.",
+        MaintTask(id: "spotlight", title: String(localized: "Réindexer Spotlight"),
+                  detail: String(localized: "Reconstruit l'index de recherche (résultats manquants, « mds » gourmand). Long."),
                   icon: "magnifyingglass", admin: true, command: "mdutil -E /"),
-        MaintTask(id: "perms", title: "Réparer les permissions du dossier personnel",
-                  detail: "Rétablit les droits d'accès par défaut de vos fichiers. Peut prendre plusieurs minutes.",
+        MaintTask(id: "perms", title: String(localized: "Réparer les permissions du dossier personnel"),
+                  detail: String(localized: "Rétablit les droits d'accès par défaut de vos fichiers. Peut prendre plusieurs minutes."),
                   icon: "lock.shield", admin: true, command: "diskutil resetUserPermissions / \(getuid())"),
-        MaintTask(id: "launchservices", title: "Reconstruire la base « Ouvrir avec »",
-                  detail: "Supprime les doublons et applications fantômes du menu « Ouvrir avec ».",
+        MaintTask(id: "launchservices", title: String(localized: "Reconstruire la base « Ouvrir avec »"),
+                  detail: String(localized: "Supprime les doublons et applications fantômes du menu « Ouvrir avec »."),
                   icon: "list.bullet.rectangle", admin: false,
                   command: "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -r -domain local -domain system -domain user && echo 'Base reconstruite.'"),
-        MaintTask(id: "quicklook", title: "Réinitialiser Coup d'œil (Quick Look)",
-                  detail: "Corrige les aperçus et vignettes qui ne s'affichent plus.",
+        MaintTask(id: "quicklook", title: String(localized: "Réinitialiser Coup d'œil (Quick Look)"),
+                  detail: String(localized: "Corrige les aperçus et vignettes qui ne s'affichent plus."),
                   icon: "eye", admin: false, command: "qlmanage -r cache; qlmanage -r"),
-        MaintTask(id: "fonts", title: "Nettoyer les caches de polices",
-                  detail: "Corrige les polices mal affichées. Redémarrage conseillé ensuite.",
+        MaintTask(id: "fonts", title: String(localized: "Nettoyer les caches de polices"),
+                  detail: String(localized: "Corrige les polices mal affichées. Redémarrage conseillé ensuite."),
                   icon: "textformat", admin: false, command: "atsutil databases -removeUser"),
-        MaintTask(id: "disk", title: "Vérifier le disque de démarrage",
-                  detail: "Contrôle l'intégrité du volume (S.O.S., sans modification).",
+        MaintTask(id: "disk", title: String(localized: "Vérifier le disque de démarrage"),
+                  detail: String(localized: "Contrôle l'intégrité du volume (S.O.S., sans modification)."),
                   icon: "internaldrive", admin: false, command: "diskutil verifyVolume /"),
-        MaintTask(id: "ui", title: "Relancer Finder, Dock et barre des menus",
-                  detail: "Utile quand l'interface se fige ou se comporte bizarrement.",
+        MaintTask(id: "ui", title: String(localized: "Relancer Finder, Dock et barre des menus"),
+                  detail: String(localized: "Utile quand l'interface se fige ou se comporte bizarrement."),
                   icon: "dock.rectangle", admin: false, command: "killall Finder; killall Dock; killall SystemUIServer; echo 'Relancés.'"),
-        MaintTask(id: "trash", title: "Vider la corbeille",
-                  detail: "Supprime définitivement le contenu de la corbeille.",
+        MaintTask(id: "trash", title: String(localized: "Vider la corbeille"),
+                  detail: String(localized: "Supprime définitivement le contenu de la corbeille."),
                   icon: "trash", admin: false, command: "osascript -e 'tell application \"Finder\" to empty trash' && echo 'Corbeille vidée.'"),
-        MaintTask(id: "clipboard", title: "Vider le presse-papiers",
-                  detail: "Efface le contenu copié (mots de passe, données sensibles).",
+        MaintTask(id: "clipboard", title: String(localized: "Vider le presse-papiers"),
+                  detail: String(localized: "Efface le contenu copié (mots de passe, données sensibles)."),
                   icon: "doc.on.clipboard", admin: false, command: "pbcopy < /dev/null && echo 'Presse-papiers vidé.'"),
-        MaintTask(id: "security", title: "Audit de sécurité",
-                  detail: "Affiche l'état de SIP, Gatekeeper, FileVault et du pare-feu.",
+        MaintTask(id: "security", title: String(localized: "Audit de sécurité"),
+                  detail: String(localized: "Affiche l'état de SIP, Gatekeeper, FileVault et du pare-feu."),
                   icon: "checkmark.shield", admin: false,
                   command: "echo \"SIP : $(csrutil status)\"; echo \"Gatekeeper : $(spctl --status)\"; echo \"FileVault : $(fdesetup status)\"; echo \"Pare-feu : $(/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate)\""),
     ]
@@ -87,17 +87,17 @@ final class MaintenanceModel: ObservableObject {
                 self.append("▶︎ \(t.title)", .title)
                 let r = Shell.sh(t.command)
                 if !r.output.isEmpty { self.append(r.output, .output) }
-                self.append(r.ok ? "✓ Terminé" : "✗ Échec (code \(r.status))", r.ok ? .success : .error)
+                self.append(r.ok ? String(localized: "✓ Terminé") : String(localized: "✗ Échec (code \(r.status))"), r.ok ? .success : .error)
                 self.finish([t.id])
             }
             // Toutes les tâches administrateur en une seule demande de mot de passe.
             let admin = list.filter(\.admin)
             if !admin.isEmpty {
-                self.append("▶︎ " + admin.map(\.title).joined(separator: " · ") + " (administrateur)", .title)
+                self.append("▶︎ " + admin.map(\.title).joined(separator: " · ") + String(localized: " (administrateur)"), .title)
                 let script = admin.map { "echo '— \($0.id)'; (\($0.command)) 2>&1" }.joined(separator: "; ") + "; true"
                 let r = Shell.admin(script)
                 if !r.output.isEmpty { self.append(r.output, .output) }
-                self.append(r.ok ? "✓ Terminé" : "✗ Annulé ou échec", r.ok ? .success : .error)
+                self.append(r.ok ? String(localized: "✓ Terminé") : String(localized: "✗ Annulé ou échec"), r.ok ? .success : .error)
                 self.finish(admin.map(\.id))
             }
         }
@@ -109,7 +109,7 @@ struct MaintenanceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PageHeader(title: "Maintenance", subtitle: "Scripts d'entretien et de réparation de macOS",
+            PageHeader(title: String(localized: "Maintenance"), subtitle: String(localized: "Scripts d'entretien et de réparation de macOS"),
                        icon: "wrench.and.screwdriver.fill", color: .gray) {
                 Button("Exécuter la sélection (\(model.selected.count))") { model.run(model.selected) }
                     .buttonStyle(.borderedProminent).disabled(model.selected.isEmpty)
