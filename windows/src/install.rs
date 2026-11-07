@@ -32,8 +32,7 @@ impl Default for Options {
     fn default() -> Self {
         let get = |n: &str| reg_get_dword(APP_KEY, n).map(|v| v != 0).unwrap_or(true);
         Options {
-            dir: installed_dir()
-                .unwrap_or_else(default_dir)
+            dir: crate::install_security::preferred_directory(installed_dir(), default_dir())
                 .to_string_lossy()
                 .into_owned(),
             desktop: get("Desktop"),
@@ -428,7 +427,7 @@ pub fn previous_installs() -> Vec<Previous> {
 /// jamais le reste du dossier ni l'exécutable en cours), ses raccourcis par
 /// utilisateur et son inscription. Historique, sauvegardes et réglages gardés.
 fn remove_previous(p: &Previous, new_dir: &Path, running: &Path) {
-    if !eq_path(&p.dir, new_dir) {
+    if !eq_path(&p.dir, new_dir) && crate::install_security::trusted(&p.dir) {
         for f in [
             APP_EXE,
             MAINTENANCE_EXE,

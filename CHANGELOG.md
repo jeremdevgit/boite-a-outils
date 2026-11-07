@@ -2,6 +2,8 @@
 
 ## Windows 2.3.1 et macOS 1.6 — 2026-11-07 — Sécurité
 
+- Création atomique des dossiers avec propriétaire/DACL protégés dès l'origine ; refus d'une création concurrente non fiable. Migration par défaut vers un emplacement protégé, sans suivre les anciens dossiers non fiables ; rJb désactive l'ancien démarrage élevé avant migration.
+- Create directories atomically with protected ownership/DACLs; reject an untrusted concurrent creator. Default upgrades choose a protected location and do not traverse unsafe old folders; rJb disables unsafe previous elevated startup before migration.
 - Identification des programmes : alternatives des expressions régulières explicitement ancrées, sans changement du classement attendu.
 - Chargement des traductions : chemins HTML constants ; lecture bornée des ressources de version et tableau réseau natif corrigé. Éditeur documenté dans EDITEUR.md.
 - Translation loading uses constant paths; version resources are bounds-checked and flexible network-table access is corrected.
