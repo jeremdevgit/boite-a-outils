@@ -1,5 +1,21 @@
 # Historique des versions
 
+## Windows 2.3.1 et macOS 1.6 — 2026-11-07 — Sécurité
+
+- Windows : rejet des chemins ambigus (`..`, noms de périphériques, flux alternatifs), résolution des chemins et rejet des jonctions/reparse points pour l'installation.
+- Les droits réels des dossiers et de leurs parents sont vérifiés. Le propriétaire et la DACL sont explicitement protégés ; une erreur de protection arrête l'installation avant la copie des exécutables.
+- Copie vers un fichier temporaire nouveau, puis protection et vérification avant remplacement.
+- CI : Actions épinglées à des SHA, compilation en lecture seule et publication isolée avec droits d'écriture. Tests de régression Windows des ACL et jonctions.
+- macOS reste en version 1.6, sans changement de binaire.
+
+### English
+
+- Windows: reject ambiguous install paths and reparse points; validate resolved paths and actual directory/parent permissions.
+- Protect and verify ownership/DACLs; abort on security failures. Stage binaries in new files and verify permissions before replacement.
+- Pin Actions to commit SHAs, isolate release write permissions and run native Windows security regression tests.
+- macOS 1.6 binaries are unchanged.
+
+
 ## Windows 2.3.0 et macOS 1.6 — 2026-11-07
 
 - Interface en huit langues : français, anglais, espagnol, allemand, italien, portugais, chinois simplifié et japonais ; choix automatique et sélecteur de langue.

@@ -22,6 +22,7 @@ mod files;
 mod search;
 mod disktree;
 mod install;
+mod install_security;
 mod journal;
 mod langue;
 mod setup;
