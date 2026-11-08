@@ -5,12 +5,14 @@
 - Windows : composants de chemin de sauvegarde contraints et identifiants winget validés avant toute création de dossier.
 - Profils WebView2 placés dans le magasin privé protégé ; l’Explorateur reçoit des arguments séparés au lieu d’une ligne de commande brute.
 - Tests de régression pour les composants de chemin et les identifiants de paquets.
+- Suppression de l’exécution JavaScript depuis un fichier temporaire dans les hooks de test ; journalisation de test échappée dans le dossier privé de l’application ; échappement des chemins et noms de fichiers dans les diagnostics de l’arbre de disque.
 
 ### English
 
 - Windows: constrain backup path components and validate winget package IDs before creating directories.
 - Store WebView2 profiles in protected private storage and pass Explorer structured arguments instead of a raw command line.
 - Add regression tests for path components and package IDs.
+- Remove temporary-file JavaScript execution from the test-hook build; escape test logs in the application's private data directory and escape paths/filenames in ignored disk-tree diagnostics.
 
 ## Windows 2.3.1 et macOS 1.6.1 — 2026-11-08 — Sécurité
 
