@@ -172,13 +172,11 @@ pub fn clean(ids: &[String], progress: impl Fn(&str)) -> Value {
                             freed += f;
                             removed += r;
                             skipped += s;
-                        } else if let Ok(m) = std::fs::metadata(&p) {
-                            if std::fs::remove_file(&p).is_ok() {
-                                freed += files::disk_size(&p, &m);
-                                removed += 1;
-                            } else {
-                                skipped += 1;
-                            }
+                        } else if let Some(size) = files::remove_file(&p) {
+                            freed += size;
+                            removed += 1;
+                        } else {
+                            skipped += 1;
                         }
                     }
                 }

@@ -89,6 +89,18 @@ fn time_limit(name: &str) -> Duration {
     })
 }
 
+fn is_user_scoped_operation(name: &str, args: &Value) -> bool {
+    let user_key = args["key"].as_str().unwrap_or("").to_ascii_uppercase();
+    (name == "programs"
+        && matches!(args["action"].as_str(), Some("uninstall" | "stop"))
+        && (user_key.starts_with("HKEY_CURRENT_USER\\") || user_key.starts_with("HKCU:\\")))
+        || (name == "repair"
+            && matches!(
+                args["action"].as_str(),
+                Some("history" | "iconcache" | "spotlight" | "godmode")
+            ))
+}
+
 struct Output {
     stdout: Vec<u8>,
     stderr: Vec<u8>,
@@ -147,10 +159,7 @@ pub fn run(name: &str, args: &Value) -> Result<Value, String> {
         ));
     }
     let ps = system_tool("WindowsPowerShell\\v1.0\\powershell.exe");
-    let user_key = args["key"].as_str().unwrap_or("").to_ascii_uppercase();
-    let user_operation = name == "programs"
-        && matches!(args["action"].as_str(), Some("uninstall" | "stop"))
-        && (user_key.starts_with("HKEY_CURRENT_USER\\") || user_key.starts_with("HKCU:\\"));
+    let user_operation = is_user_scoped_operation(name, args);
     let system = system_tool("");
     let safe_path = format!(
         "{};{};{}",
@@ -236,6 +245,28 @@ pub fn run(name: &str, args: &Value) -> Result<Value, String> {
         }
     }
     Ok(v)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn user_owned_operations_run_without_admin_authority() {
+        assert!(is_user_scoped_operation("repair", &serde_json::json!({"action":"history"})));
+        for action in ["iconcache", "spotlight", "godmode"] {
+            assert!(is_user_scoped_operation("repair", &serde_json::json!({"action":action})));
+        }
+        assert!(is_user_scoped_operation(
+            "programs",
+            &serde_json::json!({"action":"uninstall","key":"HKEY_CURRENT_USER\\Software\\x"})
+        ));
+        assert!(!is_user_scoped_operation("repair", &serde_json::json!({"action":"wureset"})));
+        assert!(!is_user_scoped_operation("repair", &serde_json::json!({"action":"battery"})));
+        assert!(!is_user_scoped_operation(
+            "programs",
+            &serde_json::json!({"action":"uninstall","key":"HKEY_LOCAL_MACHINE\\Software\\x"})
+        ));
+    }
 }
 
 /// Décode la sortie d'un outil : UTF-16 (sfc), UTF-8, ou page de code OEM de

@@ -144,6 +144,34 @@ fn cleanup_rejects_root_and_ancestor_junctions_and_preserves_controls() {
     std::fs::remove_dir_all(protected).unwrap();
 }
 #[test]
+fn individual_cleanup_file_rejects_reparse_parent_and_deletes_user_file_safely() {
+    let protected = program_files().join(unique());
+    install_security::prepare(&protected).unwrap();
+    let target = protected.join("witness.tmp");
+    std::fs::write(&target, b"keep").unwrap();
+    let user = std::env::temp_dir().join(unique());
+    std::fs::create_dir(&user).unwrap();
+    let link = user.join("junction");
+    let script = format!(
+        "$ErrorActionPreference='Stop';New-Item -ItemType Junction -Path '{}' -Target '{}'|Out-Null",
+        literal(&link), literal(&protected)
+    );
+    let status = std::process::Command::new(win::system_tool(r"WindowsPowerShell\v1.0\powershell.exe"))
+        .args(["-NoProfile", "-NonInteractive", "-EncodedCommand", &encoded(&script)])
+        .status()
+        .unwrap();
+    assert!(status.success());
+    assert!(files::remove_file(&link.join("witness.tmp")).is_none());
+    assert_eq!(std::fs::read(&target).unwrap(), b"keep");
+    let ordinary = user.join("ordinary.tmp");
+    std::fs::write(&ordinary, b"remove").unwrap();
+    assert_eq!(files::remove_file(&ordinary), Some(6));
+    assert!(!ordinary.exists());
+    std::fs::remove_dir(&link).unwrap();
+    std::fs::remove_dir(user).unwrap();
+    std::fs::remove_dir_all(protected).unwrap();
+}
+#[test]
 fn trusted_journal_round_trip_and_unsigned_tool_rejected() {
     std::env::set_var("BAO_TEST", "1");
     let private = win::operation_data_dir().unwrap();

@@ -506,3 +506,33 @@ pub fn clear_dir(path: &Path, min_age_hours: u64) -> (u64, u64, u64) {
     );
     (freed, removed, skipped)
 }
+
+/// Remove one expanded cleanup match without ever using the elevated token
+/// for a user-writable or reparse-point path. Keep the metadata read and delete
+/// in the same restricted-token operation so callers cannot accidentally
+/// validate under one identity and delete under another.
+pub fn remove_file(path: &Path) -> Option<u64> {
+    let erase = || {
+        if !ordinary_path(path) {
+            return None;
+        }
+        let metadata = std::fs::symlink_metadata(path).ok()?;
+        if metadata.file_attributes() & 0x400 != 0 || !metadata.is_file() {
+            return None;
+        }
+        let size = disk_size(path, &metadata);
+        if metadata.permissions().readonly() {
+            let mut permissions = metadata.permissions();
+            #[allow(clippy::permissions_set_readonly_false)]
+            permissions.set_readonly(false);
+            std::fs::set_permissions(path, permissions).ok()?;
+        }
+        std::fs::remove_file(path).ok()?;
+        Some(size)
+    };
+    if crate::win::is_elevated() && !crate::install_security::trusted(path) {
+        crate::user_context::as_standard_user(erase).ok().flatten()
+    } else {
+        erase()
+    }
+}
