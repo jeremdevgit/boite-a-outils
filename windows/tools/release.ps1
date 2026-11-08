@@ -94,5 +94,8 @@ Check $exe $ids
 New-Item -ItemType Directory -Force $Out | Out-Null
 $setup = Join-Path $Out "$Name-Setup.exe"
 Copy-Item $exe $setup -Force
-"$((Get-FileHash $setup -Algorithm SHA256).Hash.ToLower())  $Name-Setup.exe" | Set-Content (Join-Path $Out 'SHA256SUMS-windows.txt') -Encoding ascii
+$manifest = Join-Path $Out 'SHA256SUMS-windows.txt'
+$checksumLine = "$((Get-FileHash $setup -Algorithm SHA256).Hash.ToLower())  $Name-Setup.exe`n"
+[IO.File]::WriteAllText($manifest, $checksumLine, [Text.UTF8Encoding]::new($false))
+if ([IO.File]::ReadAllText($manifest).Contains("`r")) { throw 'Le manifeste SHA-256 doit utiliser des fins de ligne LF.' }
 Write-Host "Livre dans $Out : $((Get-Item $setup).Length) octets, SHA-256 $((Get-FileHash $setup).Hash)"
