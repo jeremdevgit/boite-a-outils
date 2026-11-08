@@ -1,5 +1,17 @@
 # Historique des versions
 
+## Windows 2.3.2 · macOS 1.6.1 — 2026-11-08 — Sécurité
+
+- Windows : composants de chemin de sauvegarde contraints et identifiants winget validés avant toute création de dossier.
+- Profils WebView2 placés dans le magasin privé protégé ; l’Explorateur reçoit des arguments séparés au lieu d’une ligne de commande brute.
+- Tests de régression pour les composants de chemin et les identifiants de paquets.
+
+### English
+
+- Windows: constrain backup path components and validate winget package IDs before creating directories.
+- Store WebView2 profiles in protected private storage and pass Explorer structured arguments instead of a raw command line.
+- Add regression tests for path components and package IDs.
+
 ## Windows 2.3.1 et macOS 1.6.1 — 2026-11-08 — Sécurité
 
 - Windows : annulations et sauvegardes sensibles dans un nouveau magasin privé protégé ; anciennes entrées consultables sans reprise automatique de leur autorité d'annulation. Cache Sysinternals protégé, chaîne de signature contrôlée dans le contexte machine.

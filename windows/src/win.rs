@@ -185,12 +185,13 @@ pub fn reveal(path: &Path) {
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("C:\\Windows"))
         .join("explorer.exe");
-    let arg = if path.is_dir() {
-        format!("\"{}\"", path.display())
+    let mut command = std::process::Command::new(explorer);
+    if path.is_dir() {
+        command.arg(path);
     } else {
-        format!("/select,\"{}\"", path.display())
-    };
-    let _ = std::process::Command::new(explorer).raw_arg(arg).spawn();
+        command.arg(format!("/select,{}", path.display()));
+    }
+    let _ = command.spawn();
 }
 
 /// Ouvre une page des Paramètres de Windows ou un outil (ms-settings:…, mdsched…).

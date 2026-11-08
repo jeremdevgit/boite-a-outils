@@ -612,7 +612,6 @@ pub fn uninstall(everything: bool, step: &dyn Fn(&str)) -> Result<(), String> {
             std::thread::sleep(std::time::Duration::from_millis(500));
         }
     }
-    let _ = std::fs::remove_dir_all(std::env::temp_dir().join("BoiteAOutilsSetup"));
     step("Retrait de l'inscription Windows…");
     reg_delete_tree(UNINSTALL_KEY);
     reg_delete_tree(APP_KEY);

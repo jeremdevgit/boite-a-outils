@@ -9,6 +9,7 @@
 //! Chaque modification est inscrite dans l'historique avec de quoi l'annuler.
 
 mod backup;
+mod backup_paths;
 mod clean;
 mod display;
 mod usb;
@@ -229,7 +230,14 @@ fn main() {
         .expect("fenêtre");
     dark_title_bar(window.hwnd() as isize);
 
-    let mut ctx = wry::WebContext::new(Some(win::data_dir().join("WebView2")));
+    let webview_dir = match win::operation_data_dir() {
+        Ok(dir) => dir.join("WebView2-App"),
+        Err(e) => {
+            runtime::webview_failed(&e);
+            return;
+        }
+    };
+    let mut ctx = wry::WebContext::new(Some(webview_dir));
     let ipc_proxy = proxy.clone();
     let png = icon_png();
     let webview = WebViewBuilder::new_with_web_context(&mut ctx)

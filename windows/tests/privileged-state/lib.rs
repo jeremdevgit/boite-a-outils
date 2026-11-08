@@ -19,5 +19,8 @@ mod journal;
 #[cfg(windows)]
 #[path = "../../src/winget.rs"]
 mod winget;
+#[cfg(windows)]
+#[path = "../../src/backup_paths.rs"]
+mod backup_paths;
 #[cfg(all(test, windows))]
 mod regression;
