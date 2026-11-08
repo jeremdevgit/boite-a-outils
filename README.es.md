@@ -142,6 +142,7 @@ Todos libres, gratuitos y sin publicidad — [github.com/jeremdevgit](https://gi
 
 | Programa | Para | En resumen |
 |---|---|---|
+| [JMeca](https://github.com/jeremdevgit/jmeca) | Windows, macOS, Linux | mantenimiento de vehículos cifrado, carpetas de clientes, historial y consumo |
 | [Pomme](https://github.com/jeremdevgit/pomme) | Windows | reproductor de Apple Music y música local |
 | [rJb](https://github.com/jeremdevgit/rjb) | Windows | la iluminación RGB de todos tus dispositivos en una sola aplicación |
 | [Ludothèque](https://github.com/jeremdevgit/ludotheque) | macOS | todos tus juegos en un solo lanzador |
