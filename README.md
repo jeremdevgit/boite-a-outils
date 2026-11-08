@@ -142,6 +142,7 @@ All free, open source and ad-free — [github.com/jeremdevgit](https://github.co
 
 | Software | For | In short |
 |---|---|---|
+| [JMeca](https://github.com/jeremdevgit/jmeca) | Windows, macOS, Linux | encrypted vehicle maintenance, client folders, service log and fuel tracking |
 | [Pomme](https://github.com/jeremdevgit/pomme) | Windows | Apple Music and local music player |
 | [rJb](https://github.com/jeremdevgit/rjb) | Windows | RGB lighting for all your devices in one app |
 | [Ludothèque](https://github.com/jeremdevgit/ludotheque) | macOS | all your games in one launcher |
