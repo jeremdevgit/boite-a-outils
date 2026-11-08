@@ -27,7 +27,10 @@ fn ft(f: FILETIME) -> u64 {
 }
 
 fn cpu_times() -> (u64, u64) {
-    let mut i = FILETIME { dwLowDateTime: 0, dwHighDateTime: 0 };
+    let mut i = FILETIME {
+        dwLowDateTime: 0,
+        dwHighDateTime: 0,
+    };
     let (mut k, mut u) = (i, i);
     unsafe { GetSystemTimes(&mut i, &mut k, &mut u) };
     // le temps noyau inclut le temps d'inactivité
@@ -42,7 +45,23 @@ fn net_bytes() -> (u64, u64) {
         if GetIfTable2(&mut t) != 0 || t.is_null() {
             return (0, 0);
         }
-        let rows = std::slice::from_raw_parts((*t).Table.as_ptr(), (*t).NumEntries as usize);
+        // MIB_IF_TABLE2 ends with a flexible array. Do not create a reference
+        // to its one-element Rust declaration before extending it to NumEntries.
+        // GetIfTable2 allocates this buffer on success (Microsoft contract):
+        // https://learn.microsoft.com/windows/win32/api/netioapi/nf-netioapi-getiftable2
+        // The null/status checks above precede all access; FreeMibTable owns cleanup.
+        let count = (*t).NumEntries as usize;
+        if count
+            > isize::MAX as usize
+                / std::mem::size_of::<windows_sys::Win32::NetworkManagement::IpHelper::MIB_IF_ROW2>(
+                )
+        {
+            FreeMibTable(t as _);
+            return (0, 0);
+        }
+        let first = std::ptr::addr_of!((*t).Table)
+            .cast::<windows_sys::Win32::NetworkManagement::IpHelper::MIB_IF_ROW2>();
+        let rows = std::slice::from_raw_parts(first, count);
         for r in rows {
             let hardware = r.InterfaceAndOperStatusFlags._bitfield & 1 != 0;
             // OperStatus 1 = connectée ; type 24 = boucle locale
@@ -83,7 +102,13 @@ fn gpu_read(q: isize, c: isize) -> Option<f64> {
             return None;
         }
         let (mut size, mut count) = (0u32, 0u32);
-        PdhGetFormattedCounterArrayW(c, PDH_FMT_DOUBLE, &mut size, &mut count, std::ptr::null_mut());
+        PdhGetFormattedCounterArrayW(
+            c,
+            PDH_FMT_DOUBLE,
+            &mut size,
+            &mut count,
+            std::ptr::null_mut(),
+        );
         if size == 0 {
             return Some(0.0);
         }
@@ -92,7 +117,10 @@ fn gpu_read(q: isize, c: isize) -> Option<f64> {
         if PdhGetFormattedCounterArrayW(c, PDH_FMT_DOUBLE, &mut size, &mut count, items) != 0 {
             return None;
         }
-        let sum: f64 = std::slice::from_raw_parts(items, count as usize).iter().map(|i| i.FmtValue.Anonymous.doubleValue).sum();
+        let sum: f64 = std::slice::from_raw_parts(items, count as usize)
+            .iter()
+            .map(|i| i.FmtValue.Anonymous.doubleValue)
+            .sum();
         Some(sum.min(100.0))
     }
 }
@@ -107,7 +135,11 @@ pub fn sample() -> Value {
         Some(p) => {
             let dt = now.duration_since(p.at).as_secs_f64().max(0.001);
             let (di, dtot) = (idle.saturating_sub(p.idle), total.saturating_sub(p.total));
-            let cpu = if dtot > 0 { 100.0 * (1.0 - di as f64 / dtot as f64) } else { 0.0 };
+            let cpu = if dtot > 0 {
+                100.0 * (1.0 - di as f64 / dtot as f64)
+            } else {
+                0.0
+            };
             let gpu = gpu_read(p.gpu_query, p.gpu_counter);
             json!({
                 "cpu": cpu.clamp(0.0, 100.0),
@@ -117,9 +149,34 @@ pub fn sample() -> Value {
                 "memTotal": mem_total, "memAvail": mem_avail,
             })
         }
-        None => json!({ "cpu": 0, "gpu": null, "rx": 0, "tx": 0, "memTotal": mem_total, "memAvail": mem_avail }),
+        None => {
+            json!({ "cpu": 0, "gpu": null, "rx": 0, "tx": 0, "memTotal": mem_total, "memAvail": mem_avail })
+        }
     };
-    let (gq, gc) = g.as_ref().map(|p| (p.gpu_query, p.gpu_counter)).unwrap_or_else(gpu_open);
-    *g = Some(Prev { at: now, idle, total, rx, tx, gpu_query: gq, gpu_counter: gc });
+    let (gq, gc) = g
+        .as_ref()
+        .map(|p| (p.gpu_query, p.gpu_counter))
+        .unwrap_or_else(gpu_open);
+    *g = Some(Prev {
+        at: now,
+        idle,
+        total,
+        rx,
+        tx,
+        gpu_query: gq,
+        gpu_counter: gc,
+    });
     out
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn native_network_table_can_be_sampled_repeatedly() {
+        // Exercise the real Windows allocation/iteration/free contract, without
+        // collecting or printing adapter identifiers or user network traffic.
+        for _ in 0..16 {
+            let _ = super::net_bytes();
+        }
+    }
 }

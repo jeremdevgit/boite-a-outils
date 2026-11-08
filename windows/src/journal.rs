@@ -21,27 +21,91 @@ pub struct Entry {
 
 static LOCK: Mutex<()> = Mutex::new(());
 
-fn path() -> std::path::PathBuf {
-    crate::win::data_dir().join("historique.json")
+fn path() -> Result<std::path::PathBuf, String> {
+    Ok(crate::win::operation_data_dir()?.join("historique.json"))
+}
+fn read(path: &std::path::Path) -> Vec<Entry> {
+    std::fs::read(path)
+        .ok()
+        .and_then(|b| serde_json::from_slice(&b).ok())
+        .unwrap_or_default()
+}
+fn legacy_display_only(mut list: Vec<Entry>) -> Vec<Entry> {
+    if list.len() > 2000 {
+        list.drain(..list.len() - 2000);
+    }
+    for (i, entry) in list.iter_mut().enumerate() {
+        entry.id = i as u64 + 1;
+        entry.undo_script.clear();
+        entry.undo_args = Value::Null;
+    }
+    list
 }
 
 pub fn load() -> Vec<Entry> {
-    std::fs::read(path()).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default()
+    let Ok(path) = path() else {
+        return Vec::new();
+    };
+    if !crate::win::is_elevated() {
+        return read(&path);
+    }
+    if path.exists() {
+        return if crate::install_security::trusted(&path) {
+            read(&path)
+        } else {
+            Vec::new()
+        };
+    }
+    legacy_display_only(read(&crate::win::data_dir().join("historique.json")))
 }
 
 fn save(list: &[Entry]) {
-    let tmp = path().with_extension("tmp");
-    if std::fs::write(&tmp, serde_json::to_vec_pretty(list).unwrap_or_default()).is_ok() {
-        let _ = std::fs::rename(&tmp, path());
+    use std::io::Write;
+    let Ok(path) = path() else {
+        return;
+    };
+    let nonce = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let tmp = path.with_extension(format!("{}-{nonce}.tmp", std::process::id()));
+    let result = (|| -> std::io::Result<()> {
+        let mut out = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&tmp)?;
+        out.write_all(&serde_json::to_vec_pretty(list)?)?;
+        out.sync_all()?;
+        drop(out);
+        std::fs::rename(&tmp, &path)
+    })();
+    if result.is_err() {
+        let _ = std::fs::remove_file(tmp);
     }
 }
 
 pub fn add(title: &str, detail: &str, undo_script: &str, undo_args: Value) -> u64 {
     let _g = LOCK.lock().unwrap();
     let mut list = load();
-    let id = list.iter().map(|e| e.id).max().unwrap_or(0) + 1;
-    let time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
-    list.push(Entry { id, time, title: title.into(), detail: detail.into(), undo_script: undo_script.into(), undo_args, undone: false });
+    let id = list
+        .iter()
+        .map(|e| e.id)
+        .max()
+        .unwrap_or(0)
+        .saturating_add(1);
+    let time = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    list.push(Entry {
+        id,
+        time,
+        title: title.into(),
+        detail: detail.into(),
+        undo_script: undo_script.into(),
+        undo_args,
+        undone: false,
+    });
     // les 2000 dernières modifications suffisent
     if list.len() > 2000 {
         let n = list.len() - 2000;
@@ -55,7 +119,10 @@ pub fn add(title: &str, detail: &str, undo_script: &str, undo_args: Value) -> u6
 pub fn undo(id: u64) -> Result<Value, String> {
     let entry = {
         let _g = LOCK.lock().unwrap();
-        load().into_iter().find(|e| e.id == id).ok_or("modification introuvable")?
+        load()
+            .into_iter()
+            .find(|e| e.id == id)
+            .ok_or("modification introuvable")?
     };
     if entry.undone {
         return Err("déjà annulée".into());
@@ -71,4 +138,26 @@ pub fn undo(id: u64) -> Result<Value, String> {
     }
     save(&list);
     Ok(r)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn legacy_history_never_authorizes_elevated_undo() {
+        let list = legacy_display_only(vec![Entry {
+            id: u64::MAX,
+            time: 1,
+            title: "demo".into(),
+            detail: "kept".into(),
+            undo_script: "startup_set".into(),
+            undo_args: serde_json::json!({"kind":"restoreTask","xml":"attacker.xml"}),
+            undone: false,
+        }]);
+        assert_eq!(list[0].title, "demo");
+        assert_eq!(list[0].detail, "kept");
+        assert_eq!(list[0].id, 1);
+        assert!(list[0].undo_script.is_empty());
+        assert!(list[0].undo_args.is_null());
+    }
 }

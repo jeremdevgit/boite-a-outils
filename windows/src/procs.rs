@@ -7,10 +7,16 @@ use crate::win::w;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use windows_sys::Win32::Foundation::{CloseHandle, FILETIME, HANDLE};
-use windows_sys::Win32::Storage::FileSystem::{GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW};
-use windows_sys::Win32::System::Diagnostics::ToolHelp::{CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS};
+use windows_sys::Win32::Storage::FileSystem::{
+    GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW,
+};
+use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+    CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
+};
 use windows_sys::Win32::System::ProcessStatus::GetProcessMemoryInfo;
-use windows_sys::Win32::System::Threading::{GetProcessTimes, OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION};
+use windows_sys::Win32::System::Threading::{
+    GetProcessTimes, OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+};
 
 /// PROCESS_MEMORY_COUNTERS_EX2 (Windows 10 1809+) : jeu de travail privé.
 #[repr(C)]
@@ -47,7 +53,11 @@ fn snapshot() -> Vec<(u32, String)> {
         e.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
         if Process32FirstW(snap, &mut e) != 0 {
             loop {
-                let n = e.szExeFile.iter().position(|c| *c == 0).unwrap_or(e.szExeFile.len());
+                let n = e
+                    .szExeFile
+                    .iter()
+                    .position(|c| *c == 0)
+                    .unwrap_or(e.szExeFile.len());
                 let name = String::from_utf16_lossy(&e.szExeFile[..n]);
                 out.push((e.th32ProcessID, name));
                 if Process32NextW(snap, &mut e) == 0 {
@@ -61,7 +71,10 @@ fn snapshot() -> Vec<(u32, String)> {
 }
 
 fn cpu_time(h: HANDLE) -> u64 {
-    let z = FILETIME { dwLowDateTime: 0, dwHighDateTime: 0 };
+    let z = FILETIME {
+        dwLowDateTime: 0,
+        dwHighDateTime: 0,
+    };
     let (mut c, mut e, mut k, mut u) = (z, z, z, z);
     unsafe {
         if GetProcessTimes(h, &mut c, &mut e, &mut k, &mut u) == 0 {
@@ -95,53 +108,106 @@ pub fn version_info(path: &str) -> (String, String) {
         if GetFileVersionInfoW(wp.as_ptr(), 0, size, data.as_mut_ptr() as _) == 0 {
             return Default::default();
         }
-        // première langue déclarée, sinon anglais américain / Unicode
-        let mut tr: *mut u16 = std::ptr::null_mut();
-        let mut tl = 0u32;
-        let lang = if VerQueryValueW(data.as_ptr() as _, w("\\VarFileInfo\\Translation").as_ptr(), &mut tr as *mut _ as _, &mut tl) != 0 && tl >= 4 {
-            format!("{:04x}{:04x}", *tr, *tr.add(1))
-        } else {
-            "040904b0".into()
-        };
-        let get = |key: &str| -> String {
-            let mut p: *mut u16 = std::ptr::null_mut();
-            let mut l = 0u32;
-            let q = w(&format!("\\StringFileInfo\\{lang}\\{key}"));
-            if VerQueryValueW(data.as_ptr() as _, q.as_ptr(), &mut p as *mut _ as _, &mut l) != 0 && !p.is_null() && l > 0 {
-                let s = std::slice::from_raw_parts(p, l as usize);
-                let n = s.iter().position(|c| *c == 0).unwrap_or(s.len());
-                String::from_utf16_lossy(&s[..n]).trim().to_string()
-            } else {
-                String::new()
+        // VerQueryValue returns views into `data`. Keep pointer arithmetic as
+        // checked offsets and read bytes through Rust's bounds-checked slices.
+        let query = |key: &str| -> Option<(usize, u32)> {
+            let mut value: *mut std::ffi::c_void = std::ptr::null_mut();
+            let mut len = 0u32;
+            if VerQueryValueW(data.as_ptr() as _, w(key).as_ptr(), &mut value, &mut len) == 0
+                || value.is_null()
+            {
+                return None;
             }
+            let offset = (value as usize).checked_sub(data.as_ptr() as usize)?;
+            (offset < data.len()).then_some((offset, len))
+        };
+        let lang = query("\\VarFileInfo\\Translation")
+            .and_then(|(offset, len)| {
+                if len < 4 {
+                    return None;
+                }
+                let tr = data.get(offset..offset.checked_add(4)?)?;
+                Some(format!(
+                    "{:04x}{:04x}",
+                    u16::from_le_bytes([tr[0], tr[1]]),
+                    u16::from_le_bytes([tr[2], tr[3]])
+                ))
+            })
+            .unwrap_or_else(|| "040904b0".into());
+        let get = |key: &str| -> String {
+            let Some((offset, len)) = query(&format!("\\StringFileInfo\\{lang}\\{key}")) else {
+                return String::new();
+            };
+            let Some(end) = (len as usize)
+                .checked_mul(2)
+                .and_then(|n| offset.checked_add(n))
+            else {
+                return String::new();
+            };
+            let Some(bytes) = data.get(offset..end) else {
+                return String::new();
+            };
+            let chars: Vec<u16> = bytes
+                .chunks_exact(2)
+                .map(|p| u16::from_le_bytes([p[0], p[1]]))
+                .take_while(|c| *c != 0)
+                .collect();
+            String::from_utf16_lossy(&chars).trim().to_string()
         };
         (get("CompanyName"), get("FileDescription"))
     }
 }
 
 pub fn list() -> Value {
-    let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) as f64;
+    let cores = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1) as f64;
     let procs: Vec<Proc> = snapshot()
         .into_iter()
-        .map(|(pid, name)| Proc { name, handle: unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) } })
+        .map(|(pid, name)| Proc {
+            name,
+            handle: unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) },
+        })
         .collect();
-    let t0: Vec<u64> = procs.iter().map(|p| if p.handle.is_null() { 0 } else { cpu_time(p.handle) }).collect();
+    let t0: Vec<u64> = procs
+        .iter()
+        .map(|p| {
+            if p.handle.is_null() {
+                0
+            } else {
+                cpu_time(p.handle)
+            }
+        })
+        .collect();
     let start = std::time::Instant::now();
     std::thread::sleep(std::time::Duration::from_millis(800));
     let elapsed = start.elapsed().as_secs_f64() * 1e7; // en unités de 100 ns
     let mut groups: HashMap<String, (u32, u64, f64, String)> = HashMap::new();
     for (i, p) in procs.iter().enumerate() {
         // nom sans « .exe », comme Get-Process
-        let name = p.name.strip_suffix(".exe").or_else(|| p.name.strip_suffix(".EXE")).unwrap_or(&p.name).to_string();
+        let name = p
+            .name
+            .strip_suffix(".exe")
+            .or_else(|| p.name.strip_suffix(".EXE"))
+            .unwrap_or(&p.name)
+            .to_string();
         let (mut ram, mut cpu, mut path) = (0u64, 0.0, String::new());
         if !p.handle.is_null() {
-            let mut c = Counters { cb: std::mem::size_of::<Counters>() as u32, ..Default::default() };
+            let mut c = Counters {
+                cb: std::mem::size_of::<Counters>() as u32,
+                ..Default::default()
+            };
             unsafe {
                 if GetProcessMemoryInfo(p.handle, &mut c as *mut _ as _, c.cb) != 0 {
-                    ram = if c.private_working_set > 0 { c.private_working_set as u64 } else { c.private_usage as u64 };
+                    ram = if c.private_working_set > 0 {
+                        c.private_working_set as u64
+                    } else {
+                        c.private_usage as u64
+                    };
                 }
             }
-            cpu = (cpu_time(p.handle).saturating_sub(t0[i]) as f64 / elapsed / cores * 100.0).max(0.0);
+            cpu = (cpu_time(p.handle).saturating_sub(t0[i]) as f64 / elapsed / cores * 100.0)
+                .max(0.0);
             path = image_path(p.handle);
             unsafe { CloseHandle(p.handle) };
         }

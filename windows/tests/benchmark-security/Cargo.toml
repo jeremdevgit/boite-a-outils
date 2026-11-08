@@ -1,0 +1,7 @@
+[package]
+name = "benchmark-file-security-tests"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "../../src/benchmark_file.rs"

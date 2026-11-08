@@ -30,6 +30,7 @@ pub fn script(name: &str) -> Option<&'static str> {
         "power" => include_str!("../ps/power.ps1"),
         "repair" => include_str!("../ps/repair.ps1"),
         "sysint" => include_str!("../ps/sysint.ps1"),
+        "winget_path" => include_str!("../ps/winget_path.ps1"),
         "hwinfo" => include_str!("../ps/hwinfo.ps1"),
         "godmode" => include_str!("../ps/godmode.ps1"),
         "personal" => include_str!("../ps/personal.ps1"),
@@ -58,11 +59,21 @@ fn base64(bytes: &[u8]) -> String {
     const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut s = String::with_capacity(bytes.len().div_ceil(3) * 4);
     for c in bytes.chunks(3) {
-        let n = (c[0] as u32) << 16 | (*c.get(1).unwrap_or(&0) as u32) << 8 | *c.get(2).unwrap_or(&0) as u32;
+        let n = (c[0] as u32) << 16
+            | (*c.get(1).unwrap_or(&0) as u32) << 8
+            | *c.get(2).unwrap_or(&0) as u32;
         s.push(T[(n >> 18) as usize & 63] as char);
         s.push(T[(n >> 12) as usize & 63] as char);
-        s.push(if c.len() > 1 { T[(n >> 6) as usize & 63] as char } else { '=' });
-        s.push(if c.len() > 2 { T[n as usize & 63] as char } else { '=' });
+        s.push(if c.len() > 1 {
+            T[(n >> 6) as usize & 63] as char
+        } else {
+            '='
+        });
+        s.push(if c.len() > 2 {
+            T[n as usize & 63] as char
+        } else {
+            '='
+        });
     }
     s
 }
@@ -72,9 +83,22 @@ fn base64(bytes: &[u8]) -> String {
 /// recherches de pilotes étant lentes par nature.
 fn time_limit(name: &str) -> Duration {
     Duration::from_secs(match name {
-        "repair" | "drivers" | "drvcat" | "features" | "restore" | "webview2" | "sysint" | "apps" | "programs" | "backup_scan" => 3600,
+        "repair" | "drivers" | "drvcat" | "features" | "restore" | "webview2" | "sysint"
+        | "apps" | "programs" | "backup_scan" => 3600,
         _ => 600,
     })
+}
+
+fn is_user_scoped_operation(name: &str, args: &Value) -> bool {
+    let user_key = args["key"].as_str().unwrap_or("").to_ascii_uppercase();
+    (name == "programs"
+        && matches!(args["action"].as_str(), Some("uninstall" | "stop"))
+        && (user_key.starts_with("HKEY_CURRENT_USER\\") || user_key.starts_with("HKCU:\\")))
+        || (name == "repair"
+            && matches!(
+                args["action"].as_str(),
+                Some("history" | "iconcache" | "spotlight" | "godmode")
+            ))
 }
 
 struct Output {
@@ -99,7 +123,10 @@ fn wait_limited(child: &mut Child, limit: Duration) -> Option<Output> {
         match child.try_wait() {
             Ok(Some(_)) | Err(_) => break,
             Ok(None) if start.elapsed() > limit => {
-                let _ = Command::new(system_tool("taskkill.exe")).args(["/PID", &child.id().to_string(), "/T", "/F"]).creation_flags(NO_WINDOW).status();
+                let _ = Command::new(system_tool("taskkill.exe"))
+                    .args(["/PID", &child.id().to_string(), "/T", "/F"])
+                    .creation_flags(NO_WINDOW)
+                    .status();
                 let _ = child.kill();
                 let _ = child.wait();
                 return None;
@@ -107,8 +134,13 @@ fn wait_limited(child: &mut Child, limit: Duration) -> Option<Output> {
             Ok(None) => std::thread::sleep(Duration::from_millis(40)),
         }
     }
-    let get = |h: Option<std::thread::JoinHandle<Vec<u8>>>| h.and_then(|h| h.join().ok()).unwrap_or_default();
-    Some(Output { stdout: get(out), stderr: get(err) })
+    let get = |h: Option<std::thread::JoinHandle<Vec<u8>>>| {
+        h.and_then(|h| h.join().ok()).unwrap_or_default()
+    };
+    Some(Output {
+        stdout: get(out),
+        stderr: get(err),
+    })
 }
 
 /// Exécute un script intégré ; ses arguments passent en JSON par une variable
@@ -121,44 +153,137 @@ pub fn run(name: &str, args: &Value) -> Result<Value, String> {
     let encoded = base64(&utf16);
     // ligne de commande Windows limitée à 32 767 caractères
     if encoded.len() > 32_000 {
-        return Err(format!("script {name} trop long ({} caractères encodés)", encoded.len()));
+        return Err(format!(
+            "script {name} trop long ({} caractères encodés)",
+            encoded.len()
+        ));
     }
-    let ps = std::env::var_os("SystemRoot")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| "C:\\Windows".into())
-        .join("System32\\WindowsPowerShell\\v1.0\\powershell.exe");
-    let mut child = Command::new(ps)
-        .args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", &encoded])
-        .env("BAO_ARGS", args.to_string())
-        // sauvegardes (.reg, tâches, raccourcis) dans le dossier de données de l'application
-        .env("BAO_DATA", crate::win::data_dir())
-        .creation_flags(NO_WINDOW)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| format!("PowerShell introuvable : {e}"))?;
+    let ps = system_tool("WindowsPowerShell\\v1.0\\powershell.exe");
+    let user_operation = is_user_scoped_operation(name, args);
+    let system = system_tool("");
+    let safe_path = format!(
+        "{};{};{}",
+        system.display(),
+        system_tool("Wbem").display(),
+        ps.parent().unwrap().display()
+    );
+    let modules = ps
+        .parent()
+        .unwrap()
+        .join("Modules")
+        .to_string_lossy()
+        .into_owned();
+    let env = [
+        ("BAO_ARGS", args.to_string()),
+        (
+            "BAO_DATA",
+            if user_operation {
+                crate::win::data_dir()
+            } else {
+                crate::win::operation_data_dir()?
+            }
+            .to_string_lossy()
+            .into_owned(),
+        ),
+        ("PATH", safe_path),
+        ("PSModulePath", modules),
+    ];
+    let arguments = [
+        "-NoProfile",
+        "-NonInteractive",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-EncodedCommand",
+        &encoded,
+    ];
     let limit = time_limit(name);
-    let out = wait_limited(&mut child, limit).ok_or_else(|| format!("{name} : aucune réponse de Windows après {} minutes, opération arrêtée", limit.as_secs() / 60))?;
+    let out = if user_operation && crate::win::is_elevated() {
+        let result =
+            crate::user_context::output(&ps, &arguments, &env, limit).map_err(|e| e.to_string())?;
+        Output {
+            stdout: result.stdout,
+            stderr: result.stderr,
+        }
+    } else {
+        let mut child = Command::new(&ps)
+            .args(arguments)
+            .envs(env)
+            .creation_flags(NO_WINDOW)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|e| format!("PowerShell introuvable : {e}"))?;
+        wait_limited(&mut child, limit).ok_or_else(|| {
+            format!(
+                "{name} : aucune réponse de Windows après {} minutes, opération arrêtée",
+                limit.as_secs() / 60
+            )
+        })?
+    };
     let text = String::from_utf8_lossy(&out.stdout);
-    let line = text.lines().rev().find(|l| l.starts_with('{') || l.starts_with('[')).unwrap_or("");
-    let v: Value = serde_json::from_str(line).map_err(|_| {
+    let line = text
+        .lines()
+        .rev()
+        .find(|l| l.starts_with('{') || l.starts_with('['))
+        .unwrap_or("");
+    let mut v: Value = serde_json::from_str(line).map_err(|_| {
         let err = String::from_utf8_lossy(&out.stderr);
-        let first = err.lines().find(|l| !l.trim().is_empty() && !l.starts_with("#<")).unwrap_or("réponse illisible");
+        let first = err
+            .lines()
+            .find(|l| !l.trim().is_empty() && !l.starts_with("#<"))
+            .unwrap_or("réponse illisible");
         format!("{name} : {}", first.trim())
     })?;
     if let Some(e) = v.get("__error").and_then(|e| e.as_str()) {
         return Err(e.to_string());
     }
+    // A lower-authority reply is display data, never a source of elevated undo.
+    if user_operation {
+        if let Some(object) = v.as_object_mut() {
+            object.remove("undo");
+        }
+    }
     Ok(v)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn user_owned_operations_run_without_admin_authority() {
+        assert!(is_user_scoped_operation("repair", &serde_json::json!({"action":"history"})));
+        for action in ["iconcache", "spotlight", "godmode"] {
+            assert!(is_user_scoped_operation("repair", &serde_json::json!({"action":action})));
+        }
+        assert!(is_user_scoped_operation(
+            "programs",
+            &serde_json::json!({"action":"uninstall","key":"HKEY_CURRENT_USER\\Software\\x"})
+        ));
+        assert!(!is_user_scoped_operation("repair", &serde_json::json!({"action":"wureset"})));
+        assert!(!is_user_scoped_operation("repair", &serde_json::json!({"action":"battery"})));
+        assert!(!is_user_scoped_operation(
+            "programs",
+            &serde_json::json!({"action":"uninstall","key":"HKEY_LOCAL_MACHINE\\Software\\x"})
+        ));
+    }
 }
 
 /// Décode la sortie d'un outil : UTF-16 (sfc), UTF-8, ou page de code OEM de
 /// la console (ipconfig, defrag, dism écrivent en 850 même après chcp 65001).
 pub fn decode(bytes: &[u8]) -> String {
-    let zeros = bytes.iter().skip(1).step_by(2).take(400).filter(|b| **b == 0).count();
+    let zeros = bytes
+        .iter()
+        .skip(1)
+        .step_by(2)
+        .take(400)
+        .filter(|b| **b == 0)
+        .count();
     if bytes.len() > 4 && zeros * 3 > bytes.len().min(800) / 2 {
-        let u: Vec<u16> = bytes.chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+        let u: Vec<u16> = bytes
+            .chunks_exact(2)
+            .map(|c| u16::from_le_bytes([c[0], c[1]]))
+            .collect();
         return String::from_utf16_lossy(&u);
     }
     if let Ok(s) = std::str::from_utf8(bytes) {
@@ -168,15 +293,34 @@ pub fn decode(bytes: &[u8]) -> String {
     // des lettres accentuées françaises plutôt que des symboles
     use windows_sys::Win32::Globalization::{MultiByteToWideChar, CP_ACP, CP_OEMCP};
     let conv = |cp: u32| unsafe {
-        let n = MultiByteToWideChar(cp, 0, bytes.as_ptr(), bytes.len() as i32, std::ptr::null_mut(), 0);
+        let n = MultiByteToWideChar(
+            cp,
+            0,
+            bytes.as_ptr(),
+            bytes.len() as i32,
+            std::ptr::null_mut(),
+            0,
+        );
         if n <= 0 {
             return String::new();
         }
         let mut out = vec![0u16; n as usize];
-        MultiByteToWideChar(cp, 0, bytes.as_ptr(), bytes.len() as i32, out.as_mut_ptr(), n);
+        MultiByteToWideChar(
+            cp,
+            0,
+            bytes.as_ptr(),
+            bytes.len() as i32,
+            out.as_mut_ptr(),
+            n,
+        );
         String::from_utf16_lossy(&out)
     };
-    let score = |s: &str| s.chars().filter(|c| "éèàùçêâôîûëïÉÈÀ’«»".contains(*c)).count() as i64 - s.chars().filter(|c| "ÚÆáÞÔ┬├│┤╗▒░█".contains(*c)).count() as i64;
+    let score = |s: &str| {
+        s.chars()
+            .filter(|c| "éèàùçêâôîûëïÉÈÀ’«»".contains(*c))
+            .count() as i64
+            - s.chars().filter(|c| "ÚÆáÞÔ┬├│┤╗▒░█".contains(*c)).count() as i64
+    };
     let (oem, ansi) = (conv(CP_OEMCP), conv(CP_ACP));
     if oem.is_empty() && ansi.is_empty() {
         return String::from_utf8_lossy(bytes).into_owned();
@@ -190,9 +334,17 @@ pub fn decode(bytes: &[u8]) -> String {
 
 /// Lance un outil de System32 en UTF-8, transmet chaque nouvelle ligne à
 /// `progress` et renvoie (code de sortie, texte complet).
-pub fn tool(exe: &str, args: &[&str], mut progress: impl FnMut(&str)) -> Result<(i32, String), String> {
+pub fn tool(
+    exe: &str,
+    args: &[&str],
+    mut progress: impl FnMut(&str),
+) -> Result<(i32, String), String> {
     let cmd = system_tool("cmd.exe");
-    let line = format!("chcp 65001>nul & \"{}\" {}", system_tool(exe).display(), args.join(" "));
+    let line = format!(
+        "chcp 65001>nul & \"{}\" {}",
+        system_tool(exe).display(),
+        args.join(" ")
+    );
     let mut child = Command::new(cmd)
         .raw_arg(format!("/d /s /c \"{line}\""))
         .creation_flags(NO_WINDOW)
@@ -221,7 +373,11 @@ pub fn tool(exe: &str, args: &[&str], mut progress: impl FnMut(&str)) -> Result<
                 // dernière ligne non vide (les outils réécrivent leur progression avec \r),
                 // cherchée dans la fin du texte seulement (DISM écrit des milliers de mises à jour)
                 let text = decode(&all[all.len().saturating_sub(4096) & !1..]);
-                if let Some(l) = text.rsplit(['\r', '\n']).map(str::trim).find(|l| !l.is_empty()) {
+                if let Some(l) = text
+                    .rsplit(['\r', '\n'])
+                    .map(str::trim)
+                    .find(|l| !l.is_empty())
+                {
                     if l != last {
                         last = l.to_string();
                         progress(&last);

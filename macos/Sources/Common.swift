@@ -12,10 +12,11 @@ struct ShellResult {
 
 enum Shell {
     @discardableResult
-    static func exec(_ path: String, _ args: [String]) -> ShellResult {
+    static func exec(_ path: String, _ args: [String], workingDirectory: URL? = nil) -> ShellResult {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: path)
         p.arguments = args
+        p.currentDirectoryURL = workingDirectory
         let pipe = Pipe()
         p.standardOutput = pipe
         p.standardError = pipe

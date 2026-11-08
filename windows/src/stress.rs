@@ -252,42 +252,62 @@ impl Drop for Aligned {
 /// Lecture et écriture séquentielles (blocs de 1 Mo) puis aléatoires (4 Ko,
 /// une requête à la fois), sans cache de Windows. Fichier de test supprimé à la fin.
 pub fn disk_bench(drive: &str, size_mb: u64, cancel: &AtomicBool, progress: &dyn Fn(&str)) -> Result<Value, String> {
-    use std::os::windows::fs::OpenOptionsExt;
     use std::os::windows::io::AsRawHandle;
+    use std::io::{Read, Write};
     let letter = drive.chars().next().filter(|c| c.is_ascii_alphabetic()).ok_or("lecteur invalide")?.to_ascii_uppercase();
     let sys = std::env::var("SystemDrive").unwrap_or_else(|_| "C:".into());
     let dir = if sys.starts_with(letter) { std::env::temp_dir() } else { std::path::PathBuf::from(format!("{letter}:\\")) };
-    let path = dir.join("BoiteAOutils-test-disque.tmp");
     let size = size_mb.clamp(64, 8192) << 20;
     const NO_BUFFERING: u32 = 0x2000_0000;
     const WRITE_THROUGH: u32 = 0x8000_0000;
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    let (path, mut f) = (0..128)
+        .find_map(|_| {
+            let nonce = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos();
+            let sequence = NEXT.fetch_add(1, Ordering::Relaxed);
+            let path = dir.join(format!("BoiteAOutils-test-disque-{}-{nonce}-{sequence}.tmp", std::process::id()));
+            match crate::benchmark_file::create_new(&path) {
+                Ok(file) => Some(Ok((path, file))),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => None,
+                Err(e) => Some(Err(e)),
+            }
+        })
+        .unwrap_or_else(|| Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "nom temporaire indisponible")))
+        .map_err(|e| format!("création du fichier de test impossible : {e}"))?;
+    let h = f.as_raw_handle() as _;
     let block = Aligned::new(1 << 20);
     let small = Aligned::new(4096);
     let result = (|| -> Result<Value, String> {
         // écriture séquentielle
         progress("Écriture séquentielle…");
-        let mut f = std::fs::OpenOptions::new().write(true).create(true).truncate(true).custom_flags(NO_BUFFERING | WRITE_THROUGH).open(&path).map_err(|e| format!("création du fichier de test impossible : {e}"))?;
         let t = Instant::now();
         let mut done = 0u64;
         while done < size {
             if cancel.load(Ordering::Relaxed) {
                 return Err("annulé".into());
             }
-            std::io::Write::write_all(&mut f, unsafe { std::slice::from_raw_parts(block.ptr, 1 << 20) }).map_err(|e| e.to_string())?;
+            f.write_all(unsafe { std::slice::from_raw_parts(block.ptr, 1 << 20) }).map_err(|e| e.to_string())?;
             done += 1 << 20;
         }
         let seq_write = size as f64 / t.elapsed().as_secs_f64() / 1e6;
-        drop(f);
         // lecture séquentielle
         progress("Lecture séquentielle…");
-        let mut f = std::fs::OpenOptions::new().read(true).custom_flags(NO_BUFFERING).open(&path).map_err(|e| e.to_string())?;
+        unsafe {
+            use windows_sys::Win32::Storage::FileSystem::{SetFilePointerEx, FILE_BEGIN};
+            if SetFilePointerEx(h, 0, std::ptr::null_mut(), FILE_BEGIN) == 0 {
+                return Err("positionnement du fichier de test impossible".into());
+            }
+        }
         let t = Instant::now();
         let mut done = 0u64;
         while done < size {
             if cancel.load(Ordering::Relaxed) {
                 return Err("annulé".into());
             }
-            std::io::Read::read_exact(&mut f, unsafe { std::slice::from_raw_parts_mut(block.ptr, 1 << 20) }).map_err(|e| e.to_string())?;
+            f.read_exact(unsafe { std::slice::from_raw_parts_mut(block.ptr, 1 << 20) }).map_err(|e| e.to_string())?;
             done += 1 << 20;
         }
         let seq_read = size as f64 / t.elapsed().as_secs_f64() / 1e6;
@@ -295,8 +315,6 @@ pub fn disk_bench(drive: &str, size_mb: u64, cancel: &AtomicBool, progress: &dyn
         let blocks = size / 4096;
         let random = |write: bool| -> Result<f64, String> {
             use windows_sys::Win32::Storage::FileSystem::{ReadFile, SetFilePointerEx, WriteFile, FILE_BEGIN};
-            let f = std::fs::OpenOptions::new().read(true).write(write).custom_flags(NO_BUFFERING | if write { WRITE_THROUGH } else { 0 }).open(&path).map_err(|e| e.to_string())?;
-            let h = f.as_raw_handle() as _;
             let mut x = 0x9E37_79B9u64;
             let mut n = 0u64;
             let t = Instant::now();
@@ -310,7 +328,9 @@ pub fn disk_bench(drive: &str, size_mb: u64, cancel: &AtomicBool, progress: &dyn
                 let off = (x % blocks) * 4096;
                 let mut io = 0u32;
                 unsafe {
-                    SetFilePointerEx(h, off as i64, std::ptr::null_mut(), FILE_BEGIN);
+                    if SetFilePointerEx(h, off as i64, std::ptr::null_mut(), FILE_BEGIN) == 0 {
+                        return Err("positionnement du fichier de test impossible".into());
+                    }
                     let ok = if write { WriteFile(h, small.ptr, 4096, &mut io, std::ptr::null_mut()) } else { ReadFile(h, small.ptr, 4096, &mut io, std::ptr::null_mut()) };
                     if ok == 0 {
                         return Err("erreur d'accès au disque".into());
@@ -331,6 +351,7 @@ pub fn disk_bench(drive: &str, size_mb: u64, cancel: &AtomicBool, progress: &dyn
             "sizeMb": size >> 20,
         }))
     })();
+    drop(f);
     let _ = std::fs::remove_file(&path);
     result
 }

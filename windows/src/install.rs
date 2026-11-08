@@ -32,8 +32,7 @@ impl Default for Options {
     fn default() -> Self {
         let get = |n: &str| reg_get_dword(APP_KEY, n).map(|v| v != 0).unwrap_or(true);
         Options {
-            dir: installed_dir()
-                .unwrap_or_else(default_dir)
+            dir: crate::install_security::preferred_directory(installed_dir(), default_dir())
                 .to_string_lossy()
                 .into_owned(),
             desktop: get("Desktop"),
@@ -428,7 +427,7 @@ pub fn previous_installs() -> Vec<Previous> {
 /// jamais le reste du dossier ni l'exécutable en cours), ses raccourcis par
 /// utilisateur et son inscription. Historique, sauvegardes et réglages gardés.
 fn remove_previous(p: &Previous, new_dir: &Path, running: &Path) {
-    if !eq_path(&p.dir, new_dir) {
+    if !eq_path(&p.dir, new_dir) && crate::install_security::trusted(&p.dir) {
         for f in [
             APP_EXE,
             MAINTENANCE_EXE,
@@ -533,7 +532,7 @@ pub fn install(o: &Options, step: &dyn Fn(&str)) -> Result<Vec<String>, String> 
     let k = UNINSTALL_KEY;
     reg_set_str(k, "DisplayName", "Boîte à outils");
     reg_set_str(k, "DisplayVersion", env!("CARGO_PKG_VERSION"));
-    reg_set_str(k, "Publisher", "Boîte à outils");
+    reg_set_str(k, "Publisher", "jeremdevgit");
     reg_set_str(k, "DisplayIcon", &format!("{},0", app.display()));
     reg_set_str(k, "InstallLocation", &dir.to_string_lossy());
     reg_set_str(k, "UninstallString", &m);
