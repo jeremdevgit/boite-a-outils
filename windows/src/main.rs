@@ -54,8 +54,6 @@ const APP_URL: &str = "http://bao.localhost/";
 enum UserEvent {
     Ipc(String),
     ToUi(Value),
-    #[cfg_attr(not(feature = "test-hooks"), allow(dead_code))]
-    Eval(String),
     Quit,
 }
 
@@ -76,12 +74,20 @@ fn testing() -> bool {
     cfg!(feature = "test-hooks") && std::env::var_os("BAO_TEST").is_some()
 }
 
-/// Journal de test (BAO_TEST) : %TEMP%\bao_test.log
+/// Journal de test réservé au dossier de données privé, sans chemin temporaire partagé.
 #[cfg(feature = "test-hooks")]
 fn test_log(msg: &str) {
     use std::io::Write;
-    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(std::env::temp_dir().join("bao_test.log")) {
-        let _ = writeln!(f, "{msg}");
+    let Ok(dir) = win::operation_data_dir() else {
+        return;
+    };
+    let safe_msg: String = msg.chars().flat_map(char::escape_default).collect();
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(dir.join("bao_test.log"))
+    {
+        let _ = writeln!(f, "{safe_msg}");
     }
 }
 
@@ -275,19 +281,6 @@ fn main() {
         Err(e) => return runtime::webview_failed(&e),
     };
 
-    // instance de test : exécute %TEMP%\bao_cmd.js quand il apparaît
-    #[cfg(feature = "test-hooks")]
-    if testing() {
-        std::thread::spawn(|| loop {
-            std::thread::sleep(std::time::Duration::from_millis(300));
-            let p = std::env::temp_dir().join("bao_cmd.js");
-            if let Ok(js) = std::fs::read_to_string(&p) {
-                let _ = std::fs::remove_file(&p);
-                post(UserEvent::Eval(js));
-            }
-        });
-    }
-
     let mut shown = false;
     let mut minimized = false;
     event_loop.run(move |event, _, flow| {
@@ -328,17 +321,6 @@ fn main() {
             }
             Event::UserEvent(UserEvent::ToUi(v)) => {
                 let _ = webview.evaluate_script(&format!("window.bao&&bao.recv({v})"));
-            }
-            Event::UserEvent(UserEvent::Eval(js)) => {
-                let js = js.trim_start_matches('\u{feff}');
-                if let Some(size) = js.strip_prefix("//resize ") {
-                    let n: Vec<f64> = size.trim().split(',').filter_map(|x| x.parse().ok()).collect();
-                    if n.len() == 2 {
-                        window.set_inner_size(tao::dpi::PhysicalSize::new(n[0], n[1]));
-                    }
-                } else {
-                    let _ = webview.evaluate_script(js);
-                }
             }
             // fenêtre réduite : plus aucun rendu ni minuterie, mémoire rendue au système
             Event::WindowEvent { event: WindowEvent::Resized(size), .. } => {

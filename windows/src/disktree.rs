@@ -909,12 +909,14 @@ mod tests {
         let m = t.nodes[t.root as usize];
         let w = finish(walk(Path::new(&dir), &cancel, &|_| {}), 0, dir.clone(), true);
         let n = w.nodes[0];
-        println!("MFT  {dir}: {} fichiers, {} dossiers, alloc {}, taille {}", m.files, m.dirs, m.alloc, m.size);
-        println!("WALK {dir}: {} fichiers, {} dossiers, alloc {}, taille {}", n.files, n.dirs, n.alloc, n.size);
+        let log_dir: String = dir.chars().flat_map(char::escape_default).collect();
+        println!("MFT  {log_dir}: {} fichiers, {} dossiers, alloc {}, taille {}", m.files, m.dirs, m.alloc, m.size);
+        println!("WALK {log_dir}: {} fichiers, {} dossiers, alloc {}, taille {}", n.files, n.dirs, n.alloc, n.size);
         let mut kids = t.children(t.root);
         kids.sort_by_key(|&k| std::cmp::Reverse(t.nodes[k as usize].alloc));
         for k in kids.into_iter().take(8) {
-            println!("  {} {}", t.path(k), t.nodes[k as usize].alloc);
+            let log_path: String = t.path(k).chars().flat_map(char::escape_default).collect();
+            println!("  {log_path} {}", t.nodes[k as usize].alloc);
         }
     }
     #[test]
