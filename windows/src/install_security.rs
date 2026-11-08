@@ -400,7 +400,9 @@ mod platform {
                 .join("System32/icacls.exe");
             assert!(std::process::Command::new(command)
                 .arg(&child)
-                .args(["/grant", "*S-1-1-0:(OI)(CI)M", "/Q"])
+                // Full control guarantees the fixture has dangerous WRITE_DAC
+                // and delete rights, independent of inherited Modify semantics.
+                .args(["/grant", "*S-1-1-0:(OI)(CI)F", "/Q"])
                 .status()
                 .unwrap()
                 .success());
