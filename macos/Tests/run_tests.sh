@@ -7,3 +7,4 @@ sed 's/^@main//' Sources/App.swift > "$OUT/AppSansMain.swift"
 swiftc -Onone -swift-version 5 -target arm64-apple-macos14 \
   $(ls Sources/*.swift | grep -v '/App.swift') "$OUT/AppSansMain.swift" Tests/main.swift -o "$OUT/tests"
 "$OUT/tests"
+python3 Tests/archive-option-boundary.py

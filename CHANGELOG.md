@@ -1,10 +1,11 @@
 # Historique des versions
 
-## Windows 2.3.1 et macOS 1.6 — 2026-11-07 — Sécurité
+## Windows 2.3.1 et macOS 1.6.1 — 2026-11-08 — Sécurité
 
 - Windows : annulations et sauvegardes sensibles dans un nouveau magasin privé protégé ; anciennes entrées consultables sans reprise automatique de leur autorité d'annulation. Cache Sysinternals protégé, chaîne de signature contrôlée dans le contexte machine.
 - Nettoyage des emplacements modifiables par l'utilisateur et opérations HKCU exécutés sans autorité administrateur ; rejet des racines/ancêtres reparse. Winget résolu uniquement depuis le paquet Microsoft protégé ; aucun repli alias/PATH élevé. Modules/outils PowerShell résolus depuis Windows.
 - Suppression des fichiers de nettoyage individuels protégée elle aussi contre les jonctions ; historique, cache d'icônes, images à la une et raccourcis du bureau traités sous jeton utilisateur restreint.
+- Le benchmark disque s’exécute sans privilèges élevés et utilise un fichier temporaire unique ouvert de façon exclusive, conservé sur le même handle pendant toute la mesure.
 - Native Windows regressions cover restricted child/thread tokens, protected-state access, root/ancestor junctions, normal user/system cleanup, history replay, Authenticode and HKCU uninstaller authority.
 - Création atomique des dossiers avec propriétaire/DACL protégés dès l'origine ; refus d'une création concurrente non fiable. Migration par défaut vers un emplacement protégé, sans suivre les anciens dossiers non fiables ; rJb désactive l'ancien démarrage élevé avant migration.
 - Create directories atomically with protected ownership/DACLs; reject an untrusted concurrent creator. Default upgrades choose a protected location and do not traverse unsafe old folders; rJb disables unsafe previous elevated startup before migration.
@@ -16,14 +17,14 @@
 - Copie vers un fichier temporaire nouveau, puis protection et vérification avant remplacement.
 - macOS : point d’entrée Swift Package pour permettre l’analyse CodeQL des sources natives.
 - CI : Actions épinglées à des SHA, compilation en lecture seule et publication isolée avec droits d'écriture. Tests de régression Windows des ACL et jonctions.
-- macOS reste en version 1.6, sans changement de binaire.
+- macOS : les noms de fichiers ZIP/TAR sont séparés des options de l’outil ; la compression ZIP multiple n’utilise plus de shell.
 
 ### English
 
 - Windows: reject ambiguous install paths and reparse points; validate resolved paths and actual directory/parent permissions.
 - Protect and verify ownership/DACLs; abort on security failures. Stage binaries in new files and verify permissions before replacement.
 - Pin Actions to commit SHAs, isolate release write permissions and run native Windows security regression tests.
-- macOS 1.6 binaries are unchanged.
+- macOS 1.6.1 separates user filenames from ZIP/TAR options and removes the ZIP shell command.
 
 
 ## Windows 2.3.0 et macOS 1.6 — 2026-11-07

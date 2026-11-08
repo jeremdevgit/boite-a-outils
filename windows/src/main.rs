@@ -17,6 +17,7 @@ mod hwinfo;
 mod pawnio;
 mod sensors;
 mod stress;
+mod benchmark_file;
 mod taskbar;
 mod files;
 mod search;
@@ -613,7 +614,15 @@ fn run(cmd: &str, a: &Value, cancel: &AtomicBool, progress: &(dyn Fn(Value) + Sy
             Ok(stress::status())
         }
         "stress.status" => Ok(stress::status()),
-        "bench.disk" => stress::disk_bench(a["drive"].as_str().unwrap_or(&win::system_drive()), a["sizeMb"].as_u64().unwrap_or(1024), cancel, &|l| progress(json!({ "line": l }))),
+        "bench.disk" => user_context::as_standard_user(|| {
+            stress::disk_bench(
+                a["drive"].as_str().unwrap_or(&win::system_drive()),
+                a["sizeMb"].as_u64().unwrap_or(1024),
+                cancel,
+                &|l| progress(json!({ "line": l })),
+            )
+        })
+        .map_err(|e| e.to_string())?,
         "taskbar.get" => Ok(json!({ "config": taskbar::load(), "running": taskbar::running() })),
         "taskbar.set" => {
             let c: taskbar::Config = serde_json::from_value(a["config"].clone()).map_err(|e| e.to_string())?;

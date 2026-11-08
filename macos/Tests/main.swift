@@ -93,6 +93,14 @@ section("Utilitaires (bac à sable)")
 let util = UtilitiesModel()
 let src = sandbox.appendingPathComponent("archive-source")
 _ = write("archive-source/doc.txt", Data("Bonjour".utf8)); _ = write("archive-source/sous/img.bin", random(50_000))
+let optionTest = write("archive-options/--test", Data("test option name".utf8))
+let optionCommand = write("archive-options/--unzip-command=touch ZIP_OPTION_EXECUTED", Data("command option name".utf8))
+let optionNormal = write("archive-options/ordinary.txt", Data("ordinary name".utf8))
+util.compress([optionTest, optionCommand, optionNormal], .zip, password: "", reveal: false)
+let optionArchive = waitFor(30, { !util.archiveBusy && util.lastArchive != nil }) ? util.lastArchive : nil
+let optionListing = optionArchive.map { Shell.exec("/usr/bin/unzip", ["-Z1", $0.path]).output } ?? ""
+check("noms ZIP commençant par -- restent des fichiers", optionListing.contains("--test") && optionListing.contains("--unzip-command=touch ZIP_OPTION_EXECUTED"))
+check("aucune commande injectée par un nom de fichier", !FS.exists(sandbox.appendingPathComponent("archive-options/ZIP_OPTION_EXECUTED")))
 let refHash = SHA256.hash(data: (try? Data(contentsOf: src.appendingPathComponent("sous/img.bin"))) ?? Data())
 for fmt in [UtilitiesModel.ArchiveFormat.zip, .tgz, .txz, .aar] {
     util.lastArchive = nil

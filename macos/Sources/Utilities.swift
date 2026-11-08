@@ -101,11 +101,13 @@ final class UtilitiesModel: ObservableObject {
                 if urls.count == 1 {
                     r = Shell.exec("/usr/bin/ditto", ["-c", "-k", "--sequesterRsrc", "--keepParent", first.path, out.path])
                 } else {
-                    r = Shell.sh("cd \(Shell.quote(dir.path)) && /usr/bin/zip -qry \(Shell.quote(out.path)) " + names.map(Shell.quote).joined(separator: " "))
+                    // `--` ends option parsing: a selected file named `--test`
+                    // or `--unzip-command=...` remains a filename, not a zip option.
+                    r = Shell.exec("/usr/bin/zip", ["-qry", out.path, "--"] + names, workingDirectory: dir)
                 }
             case .tgz, .txz:
                 out = Self.unique(dir.appendingPathComponent(base + (format == .tgz ? ".tar.gz" : ".tar.xz")))
-                r = Shell.exec("/usr/bin/tar", ["-C", dir.path, format == .tgz ? "-czf" : "-cJf", out.path] + names)
+                r = Shell.exec("/usr/bin/tar", ["-C", dir.path, format == .tgz ? "-czf" : "-cJf", out.path, "--"] + names)
             case .aar:
                 out = Self.unique(dir.appendingPathComponent(base + ".aar"))
                 if urls.count == 1 && FS.isDirectory(first) {
