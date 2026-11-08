@@ -55,6 +55,9 @@ jobs:
       - name: Frontières de privilèges (fixtures locales isolées)
         run: cargo test --locked --manifest-path tests/privileged-state/Cargo.toml -- --test-threads=1
 
+      - name: Compilation des hooks de test
+        run: cargo check --locked --features test-hooks
+
       - name: Compilation et contrôles (chemins, identifiants, Runtime Visual C++)
         run: ./tools/release.ps1 -Out dist -Ci
 
