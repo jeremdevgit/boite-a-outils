@@ -142,6 +142,7 @@ Todos libres, gratuitos y sin publicidad — [github.com/jeremdevgit](https://gi
 
 | Programa | Para | En resumen |
 |---|---|---|
+| [Carnet Rust](https://github.com/jeremdevgit/carnet-rust) | Windows | notas locales cifradas y sincronización Joplin/Nextcloud experimental · [descargar ZIP](https://github.com/jeremdevgit/carnet-rust/releases/latest) |
 | [JMeca](https://github.com/jeremdevgit/jmeca) | Windows, macOS, Linux | mantenimiento de vehículos cifrado, carpetas de clientes, historial y consumo |
 | [Pomme](https://github.com/jeremdevgit/pomme) | Windows | reproductor de Apple Music y música local |
 | [rJb](https://github.com/jeremdevgit/rjb) | Windows | la iluminación RGB de todos tus dispositivos en una sola aplicación |
