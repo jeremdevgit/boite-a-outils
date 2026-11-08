@@ -23,6 +23,7 @@ mod search;
 mod disktree;
 mod install;
 mod install_security;
+mod user_context;
 mod journal;
 mod langue;
 mod setup;
@@ -592,7 +593,7 @@ fn run(cmd: &str, a: &Value, cancel: &AtomicBool, progress: &(dyn Fn(Value) + Sy
                 return Err("winget est absent de ce PC : installez PawnIO depuis pawnio.eu, puis relancez la Boîte à outils".into());
             }
             use std::os::windows::process::CommandExt;
-            let line = format!("\"\"{}\" install --id namazso.PawnIO -e --accept-package-agreements --accept-source-agreements & echo. & echo Relancez la Boite a outils une fois l'installation terminee. & pause\"", winget::exe().display());
+            let line = format!("\"\"{}\" install --id namazso.PawnIO -e --accept-package-agreements --accept-source-agreements & echo. & echo Relancez la Boite a outils une fois l'installation terminee. & pause\"", winget::exe()?.display());
             std::process::Command::new(win::system_tool("cmd.exe")).raw_arg(format!("/C {line}")).spawn().map_err(|e| e.to_string())?;
             Ok(Value::Null)
         }

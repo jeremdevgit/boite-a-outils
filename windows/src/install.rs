@@ -532,7 +532,7 @@ pub fn install(o: &Options, step: &dyn Fn(&str)) -> Result<Vec<String>, String> 
     let k = UNINSTALL_KEY;
     reg_set_str(k, "DisplayName", "Boîte à outils");
     reg_set_str(k, "DisplayVersion", env!("CARGO_PKG_VERSION"));
-    reg_set_str(k, "Publisher", "Boîte à outils");
+    reg_set_str(k, "Publisher", "jeremdevgit");
     reg_set_str(k, "DisplayIcon", &format!("{},0", app.display()));
     reg_set_str(k, "InstallLocation", &dir.to_string_lossy());
     reg_set_str(k, "UninstallString", &m);

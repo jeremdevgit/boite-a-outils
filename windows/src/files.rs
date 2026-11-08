@@ -14,14 +14,22 @@ use std::time::{Instant, SystemTime};
 const FILE_ATTRIBUTE_OFFLINE: u32 = 0x1000;
 const FILE_ATTRIBUTE_RECALL_ON_OPEN: u32 = 0x40000;
 const FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS: u32 = 0x400000;
-const CLOUD: u32 = FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS;
+const CLOUD: u32 =
+    FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS;
 
 pub fn age_days(t: SystemTime) -> u64 {
-    SystemTime::now().duration_since(t).map(|d| d.as_secs() / 86400).unwrap_or(0)
+    SystemTime::now()
+        .duration_since(t)
+        .map(|d| d.as_secs() / 86400)
+        .unwrap_or(0)
 }
 
 fn mtime_secs(m: &std::fs::Metadata) -> u64 {
-    m.modified().ok().and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok()).map(|d| d.as_secs()).unwrap_or(0)
+    m.modified()
+        .ok()
+        .and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok())
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 const FILE_ATTRIBUTE_SPARSE_FILE: u32 = 0x200;
@@ -58,7 +66,10 @@ where
 {
     let state = Mutex::new((vec![(root.to_path_buf(), 0usize)], 0usize));
     let cv = Condvar::new();
-    let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).clamp(2, 12);
+    let threads = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4)
+        .clamp(2, 12);
     std::thread::scope(|s| {
         for _ in 0..threads {
             s.spawn(|| loop {
@@ -108,7 +119,13 @@ where
 }
 
 /// Fichiers les plus lourds et taille des dossiers (3 niveaux) sous `root`.
-pub fn scan_large(root: &Path, min_size: u64, top: usize, cancel: &AtomicBool, progress: impl Fn(Value) + Sync) -> Value {
+pub fn scan_large(
+    root: &Path,
+    min_size: u64,
+    top: usize,
+    cancel: &AtomicBool,
+    progress: impl Fn(Value) + Sync,
+) -> Value {
     let started = Instant::now();
     let counter = AtomicU64::new(0);
     let total = AtomicU64::new(0);
@@ -150,7 +167,9 @@ pub fn scan_large(root: &Path, min_size: u64, top: usize, cancel: &AtomicBool, p
         let mut l = last.lock().unwrap();
         if l.elapsed().as_millis() > 250 {
             *l = Instant::now();
-            progress(json!({ "files": counter.load(Ordering::Relaxed), "bytes": total.load(Ordering::Relaxed), "dir": dir.to_string_lossy() }));
+            progress(
+                json!({ "files": counter.load(Ordering::Relaxed), "bytes": total.load(Ordering::Relaxed), "dir": dir.to_string_lossy() }),
+            );
         }
     });
     let mut files: Vec<_> = heap.into_inner().unwrap().into_sorted_vec();
@@ -188,7 +207,12 @@ fn hash(path: &Path, head: Option<usize>) -> Option<u64> {
 
 /// Doublons parmi les fichiers d'au moins `min_size` octets sous `roots` :
 /// même taille, puis même début (64 Ko), puis même contenu complet.
-pub fn duplicates(roots: &[PathBuf], min_size: u64, cancel: &AtomicBool, progress: impl Fn(Value) + Sync) -> Value {
+pub fn duplicates(
+    roots: &[PathBuf],
+    min_size: u64,
+    cancel: &AtomicBool,
+    progress: impl Fn(Value) + Sync,
+) -> Value {
     let counter = AtomicU64::new(0);
     let by_size: Mutex<HashMap<u64, Vec<(PathBuf, u64)>>> = Mutex::new(HashMap::new());
     for r in roots {
@@ -202,7 +226,12 @@ pub fn duplicates(roots: &[PathBuf], min_size: u64, cancel: &AtomicBool, progres
             }
         });
     }
-    let candidates: Vec<(u64, Vec<(PathBuf, u64)>)> = by_size.into_inner().unwrap().into_iter().filter(|(_, v)| v.len() > 1).collect();
+    let candidates: Vec<(u64, Vec<(PathBuf, u64)>)> = by_size
+        .into_inner()
+        .unwrap()
+        .into_iter()
+        .filter(|(_, v)| v.len() > 1)
+        .collect();
     let total = candidates.len();
     let mut groups = Vec::new();
     for (i, (size, list)) in candidates.into_iter().enumerate() {
@@ -221,7 +250,11 @@ pub fn duplicates(roots: &[PathBuf], min_size: u64, cancel: &AtomicBool, progres
         for (_, l) in by_head.into_iter().filter(|(_, v)| v.len() > 1) {
             let mut by_full: HashMap<u64, Vec<(PathBuf, u64)>> = HashMap::new();
             for (p, t) in l {
-                let h = if size <= 64 << 10 { hash(&p, Some(64 << 10)) } else { hash(&p, None) };
+                let h = if size <= 64 << 10 {
+                    hash(&p, Some(64 << 10))
+                } else {
+                    hash(&p, None)
+                };
                 if let Some(h) = h {
                     by_full.entry(h).or_default().push((p, t));
                 }
@@ -232,7 +265,10 @@ pub fn duplicates(roots: &[PathBuf], min_size: u64, cancel: &AtomicBool, progres
         }
     }
     groups.sort_by(|a, b| {
-        let w = |v: &Value| v["size"].as_u64().unwrap_or(0) * (v["files"].as_array().map(|a| a.len()).unwrap_or(1) as u64 - 1);
+        let w = |v: &Value| {
+            v["size"].as_u64().unwrap_or(0)
+                * (v["files"].as_array().map(|a| a.len()).unwrap_or(1) as u64 - 1)
+        };
         w(b).cmp(&w(a))
     });
     json!({ "groups": groups, "scanned": counter.load(Ordering::Relaxed), "cancelled": cancel.load(Ordering::Relaxed) })
@@ -245,7 +281,9 @@ pub fn empty_dirs(roots: &[PathBuf], cancel: &AtomicBool) -> Vec<Value> {
         if cancel.load(Ordering::Relaxed) || depth > 14 {
             return false;
         }
-        let Ok(rd) = std::fs::read_dir(dir) else { return false };
+        let Ok(rd) = std::fs::read_dir(dir) else {
+            return false;
+        };
         let mut empty = true;
         let mut empties = Vec::new();
         for e in rd.flatten() {
@@ -273,11 +311,16 @@ pub fn empty_dirs(roots: &[PathBuf], cancel: &AtomicBool) -> Vec<Value> {
     let mut out = Vec::new();
     for r in roots {
         // la racine elle-même n'est jamais proposée
-        let Ok(rd) = std::fs::read_dir(r) else { continue };
+        let Ok(rd) = std::fs::read_dir(r) else {
+            continue;
+        };
         for e in rd.flatten() {
             // seulement les dossiers posés directement dans Bureau, Documents… : plus bas,
             // les dossiers vides appartiennent souvent à un jeu ou un logiciel qui les attend
-            if e.file_type().map(|t| t.is_dir() && !t.is_symlink()).unwrap_or(false) {
+            if e.file_type()
+                .map(|t| t.is_dir() && !t.is_symlink())
+                .unwrap_or(false)
+            {
                 let mut sub = Vec::new();
                 if visit(&e.path(), &mut sub, cancel, 1) {
                     out.push(e.path());
@@ -285,27 +328,66 @@ pub fn empty_dirs(roots: &[PathBuf], cancel: &AtomicBool) -> Vec<Value> {
             }
         }
     }
-    out.into_iter().map(|p| json!({ "path": p.to_string_lossy() })).collect()
+    out.into_iter()
+        .map(|p| json!({ "path": p.to_string_lossy() }))
+        .collect()
+}
+
+/// No reparse component is an authorized cleanup root. The privilege boundary
+/// below also covers replacements after this check: user-writable trees run
+/// with a restricted user token, never with ambient administrator authority.
+fn ordinary_path(path: &Path) -> bool {
+    path.is_absolute()
+        && path
+            .ancestors()
+            .all(|p| std::fs::symlink_metadata(p).is_ok_and(|m| m.file_attributes() & 0x400 == 0))
+}
+fn in_directory_context<T>(path: &Path, operation: impl FnOnce() -> T) -> Option<T> {
+    if !ordinary_path(path) {
+        return None;
+    }
+    if crate::win::is_elevated() && !crate::install_security::trusted(path) {
+        crate::user_context::as_standard_user(operation).ok()
+    } else {
+        Some(operation())
+    }
 }
 
 /// Taille et nombre de fichiers d'un dossier (récursif, sans suivre les liens).
 pub fn dir_size(path: &Path, min_age_hours: u64) -> (u64, u64) {
+    in_directory_context(path, || dir_size_in_context(path, min_age_hours)).unwrap_or((0, 0))
+}
+fn dir_size_in_context(path: &Path, min_age_hours: u64) -> (u64, u64) {
     let mut size = 0;
     let mut count = 0;
     let mut stack = vec![path.to_path_buf()];
     let now = SystemTime::now();
     while let Some(d) = stack.pop() {
-        let Ok(rd) = std::fs::read_dir(&d) else { continue };
+        let Ok(rd) = std::fs::read_dir(&d) else {
+            continue;
+        };
         for e in rd.flatten() {
             let Ok(ft) = e.file_type() else { continue };
             if ft.is_symlink() {
                 continue;
             }
             if ft.is_dir() {
-                stack.push(e.path());
+                let child = e.path();
+                if crate::win::is_elevated() && !crate::install_security::trusted(&child) {
+                    let (s, n) = dir_size(&child, min_age_hours);
+                    size += s;
+                    count += n;
+                } else if ordinary_path(&child) {
+                    stack.push(child);
+                }
             } else if let Ok(m) = e.metadata() {
                 if min_age_hours > 0 {
-                    let age = m.modified().ok().and_then(|t| now.duration_since(t).ok()).map(|d| d.as_secs() / 3600).unwrap_or(0);
+                    let age = m
+                        .modified()
+                        .ok()
+                        .and_then(|t| now.duration_since(t).ok())
+                        .map(|d| d.as_secs() / 3600)
+                        .unwrap_or(0);
                     if age < min_age_hours {
                         continue;
                     }
@@ -323,36 +405,90 @@ pub fn dir_size(path: &Path, min_age_hours: u64) -> (u64, u64) {
 pub fn clear_dir(path: &Path, min_age_hours: u64) -> (u64, u64, u64) {
     let (mut freed, mut removed, mut skipped) = (0u64, 0u64, 0u64);
     let now = SystemTime::now();
-    fn inner(d: &Path, now: SystemTime, min_age: u64, freed: &mut u64, removed: &mut u64, skipped: &mut u64) {
-        let Ok(rd) = std::fs::read_dir(d) else { return };
+    fn inner(
+        d: &Path,
+        now: SystemTime,
+        min_age: u64,
+        freed: &mut u64,
+        removed: &mut u64,
+        skipped: &mut u64,
+    ) {
+        if !ordinary_path(d) {
+            *skipped += 1;
+            return;
+        }
+        if crate::win::is_elevated() && !crate::install_security::trusted(d) {
+            if crate::user_context::as_standard_user(|| {
+                contents(d, now, min_age, freed, removed, skipped)
+            })
+            .is_err()
+            {
+                *skipped += 1;
+            }
+        } else {
+            contents(d, now, min_age, freed, removed, skipped);
+        }
+    }
+    fn contents(
+        d: &Path,
+        now: SystemTime,
+        min_age: u64,
+        freed: &mut u64,
+        removed: &mut u64,
+        skipped: &mut u64,
+    ) {
+        let Ok(rd) = std::fs::read_dir(d) else {
+            *skipped += 1;
+            return;
+        };
         for e in rd.flatten() {
             let Ok(ft) = e.file_type() else { continue };
             let p = e.path();
-            if ft.is_symlink() {
-                // un lien est retiré sans toucher à sa cible
-                if std::fs::remove_dir(&p).or_else(|_| std::fs::remove_file(&p)).is_ok() {
-                    *removed += 1;
-                }
+            if ft.is_symlink()
+                || std::fs::symlink_metadata(&p).is_ok_and(|m| m.file_attributes() & 0x400 != 0)
+            {
+                *skipped += 1;
                 continue;
             }
             if ft.is_dir() {
                 inner(&p, now, min_age, freed, removed, skipped);
                 let _ = std::fs::remove_dir(&p); // seulement s'il est vide
             } else if let Ok(m) = e.metadata() {
-                let age = m.modified().ok().and_then(|t| now.duration_since(t).ok()).map(|d| d.as_secs() / 3600).unwrap_or(0);
+                let age = m
+                    .modified()
+                    .ok()
+                    .and_then(|t| now.duration_since(t).ok())
+                    .map(|d| d.as_secs() / 3600)
+                    .unwrap_or(0);
                 if age < min_age {
                     *skipped += 1;
                     continue;
                 }
-                let sz = disk_size(&p, &m);
-                if m.permissions().readonly() {
-                    let mut perm = m.permissions();
-                    #[allow(clippy::permissions_set_readonly_false)]
-                    perm.set_readonly(false);
-                    let _ = std::fs::set_permissions(&p, perm);
-                }
-                if std::fs::remove_file(&p).is_ok() {
-                    *freed += sz;
+                let erase = || {
+                    if !ordinary_path(&p) {
+                        return None;
+                    }
+                    let metadata = std::fs::symlink_metadata(&p).ok()?;
+                    if metadata.file_attributes() & 0x400 != 0 {
+                        return None;
+                    }
+                    let size = disk_size(&p, &metadata);
+                    if metadata.permissions().readonly() {
+                        let mut permissions = metadata.permissions();
+                        #[allow(clippy::permissions_set_readonly_false)]
+                        permissions.set_readonly(false);
+                        std::fs::set_permissions(&p, permissions).ok()?;
+                    }
+                    std::fs::remove_file(&p).ok()?;
+                    Some(size)
+                };
+                let result = if crate::win::is_elevated() && !crate::install_security::trusted(&p) {
+                    crate::user_context::as_standard_user(erase).ok().flatten()
+                } else {
+                    erase()
+                };
+                if let Some(size) = result {
+                    *freed += size;
                     *removed += 1;
                 } else {
                     *skipped += 1;
@@ -360,7 +496,13 @@ pub fn clear_dir(path: &Path, min_age_hours: u64) -> (u64, u64, u64) {
             }
         }
     }
-    inner(path, now, min_age_hours, &mut freed, &mut removed, &mut skipped);
+    inner(
+        path,
+        now,
+        min_age_hours,
+        &mut freed,
+        &mut removed,
+        &mut skipped,
+    );
     (freed, removed, skipped)
 }
-

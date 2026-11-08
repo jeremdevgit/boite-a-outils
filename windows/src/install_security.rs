@@ -221,8 +221,12 @@ mod platform {
         Ok(())
     }
 
-    fn descriptor() -> Result<OwnedDescriptor, String> {
-        let sddl = wide("O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FRFX;;;BU)");
+    fn descriptor(private: bool) -> Result<OwnedDescriptor, String> {
+        let sddl = wide(if private {
+            "O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)"
+        } else {
+            "O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FRFX;;;BU)"
+        });
         let mut sd = std::ptr::null_mut();
         if unsafe {
             ConvertStringSecurityDescriptorToSecurityDescriptorW(
@@ -237,8 +241,8 @@ mod platform {
         }
         Ok(OwnedDescriptor(sd))
     }
-    fn set_acl(path: &Path) -> Result<(), String> {
-        let guard = descriptor()?;
+    fn set_acl_with(path: &Path, private: bool) -> Result<(), String> {
+        let guard = descriptor(private)?;
         let sd = guard.0;
         let mut acl = std::ptr::null_mut();
         let mut owner = std::ptr::null_mut();
@@ -269,11 +273,14 @@ mod platform {
         }
         Ok(())
     }
+    fn set_acl(path: &Path) -> Result<(), String> {
+        set_acl_with(path, false)
+    }
     // The protected descriptor is applied by Windows as part of exclusive
     // creation. There is never an inherited-writable interval in which another
     // user could retain a WRITE_DAC handle before we tighten permissions.
-    fn create_protected(path: &Path) -> Result<(), String> {
-        let guard = descriptor()?;
+    fn create_protected_with(path: &Path, private: bool) -> Result<(), String> {
+        let guard = descriptor(private)?;
         let attrs = SECURITY_ATTRIBUTES {
             nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
             lpSecurityDescriptor: guard.0,
@@ -292,7 +299,16 @@ mod platform {
         }
         Ok(())
     }
+    fn create_protected(path: &Path) -> Result<(), String> {
+        create_protected_with(path, false)
+    }
     pub fn prepare(path: &Path) -> Result<(), String> {
+        prepare_with(path, false)
+    }
+    pub fn prepare_private(path: &Path) -> Result<(), String> {
+        prepare_with(path, true)
+    }
+    fn prepare_with(path: &Path, private: bool) -> Result<(), String> {
         let normalized = normalize(&path.to_string_lossy())?;
         let mut missing = Vec::new();
         let mut ancestor = normalized.as_path();
@@ -310,10 +326,10 @@ mod platform {
             if !directory.parent().is_some_and(safe_parents) {
                 return Err(UNSAFE_DIRECTORY.into());
             }
-            create_protected(&directory)?;
+            create_protected_with(&directory, private)?;
         }
         // Only objects already proven protected can reach this adjustment.
-        set_acl(&normalized)?;
+        set_acl_with(&normalized, private)?;
         if !trusted(&normalized) {
             return Err(PERMISSIONS_FAILED.into());
         }
@@ -435,7 +451,7 @@ mod platform {
     }
 }
 #[cfg(windows)]
-pub use platform::{normalize, prepare, seal_file, trusted};
+pub use platform::{normalize, prepare, prepare_private, seal_file, trusted};
 #[cfg(not(windows))]
 pub fn normalize(input: &str) -> Result<PathBuf, String> {
     checked_spelling(input).map(PathBuf::from)
@@ -507,4 +523,9 @@ pub fn preferred_directory(existing: Option<PathBuf>, default: PathBuf) -> PathB
         return default.with_file_name(name);
     }
     default
+}
+
+#[cfg(not(windows))]
+pub fn prepare_private(_: &Path) -> Result<(), String> {
+    Err(UNSAFE_DIRECTORY.into())
 }

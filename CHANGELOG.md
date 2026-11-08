@@ -2,6 +2,9 @@
 
 ## Windows 2.3.1 et macOS 1.6 — 2026-11-07 — Sécurité
 
+- Windows : annulations et sauvegardes sensibles dans un nouveau magasin privé protégé ; anciennes entrées consultables sans reprise automatique de leur autorité d'annulation. Cache Sysinternals protégé, chaîne de signature contrôlée dans le contexte machine.
+- Nettoyage des emplacements modifiables par l'utilisateur et opérations HKCU exécutés sans autorité administrateur ; rejet des racines/ancêtres reparse. Winget résolu uniquement depuis le paquet Microsoft protégé ; aucun repli alias/PATH élevé. Modules/outils PowerShell résolus depuis Windows.
+- Native Windows regressions cover restricted child/thread tokens, protected-state access, root/ancestor junctions, normal user/system cleanup, history replay, Authenticode and HKCU uninstaller authority.
 - Création atomique des dossiers avec propriétaire/DACL protégés dès l'origine ; refus d'une création concurrente non fiable. Migration par défaut vers un emplacement protégé, sans suivre les anciens dossiers non fiables ; rJb désactive l'ancien démarrage élevé avant migration.
 - Create directories atomically with protected ownership/DACLs; reject an untrusted concurrent creator. Default upgrades choose a protected location and do not traverse unsafe old folders; rJb disables unsafe previous elevated startup before migration.
 - Identification des programmes : alternatives des expressions régulières explicitement ancrées, sans changement du classement attendu.
