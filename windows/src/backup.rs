@@ -3,6 +3,7 @@
 //! installateurs, inventaire lisible et scripts de réinstallation, le tout dans
 //! un seul dossier. Rien n'est supprimé ni déplacé à la source.
 
+use crate::backup_paths::{component, installer_dir};
 use crate::win::{self, w};
 use serde_json::{json, Value};
 use std::io::Write;
@@ -217,7 +218,10 @@ pub fn run(a: &Value, cancel: &AtomicBool, progress: &(dyn Fn(Value) + Sync)) ->
         return Err("dossier de destination introuvable".into());
     }
     let stamp: String = a["stamp"].as_str().unwrap_or("sauvegarde").chars().filter(|c| c.is_ascii_alphanumeric() || *c == '-').collect();
-    let root = dest.join(format!("Sauvegarde-{}-{stamp}", std::env::var("COMPUTERNAME").unwrap_or_else(|_| "PC".into())));
+    let computer = std::env::var("COMPUTERNAME")
+        .map(|name| component(&name, "PC"))
+        .unwrap_or_else(|_| "PC".into());
+    let root = dest.join(format!("Sauvegarde-{computer}-{stamp}"));
     std::fs::create_dir_all(&root).map_err(|e| format!("destination non inscriptible : {e}"))?;
     let empty = vec![];
     let items = a["items"].as_array().unwrap_or(&empty);
@@ -239,7 +243,7 @@ pub fn run(a: &Value, cancel: &AtomicBool, progress: &(dyn Fn(Value) + Sync)) ->
     let mut c = Copy { files: 0, bytes: 0, skipped: 0, errors: Vec::new(), dest_root: norm(&root), skip_caches: a["skipCaches"].as_bool().unwrap_or(true), cancel, last: Instant::now(), progress, label: String::new() };
     for it in items {
         let src = PathBuf::from(it["path"].as_str().unwrap_or(""));
-        let id: String = it["label"].as_str().unwrap_or("Dossier").chars().map(|x| if "\\/:*?\"<>|".contains(x) { '_' } else { x }).collect();
+        let id = component(it["label"].as_str().unwrap_or("Dossier"), "Dossier");
         c.label = id.clone();
         progress(json!({ "step": "data", "label": id, "files": c.files, "bytes": c.bytes, "errors": c.errors.len() }));
         if src.is_file() {
@@ -269,7 +273,10 @@ pub fn run(a: &Value, cancel: &AtomicBool, progress: &(dyn Fn(Value) + Sync)) ->
             break;
         }
         progress(json!({ "step": "installers", "label": id, "index": i + 1, "total": ids.len() }));
-        let dir = root.join("Installateurs").join(id);
+        let Some(dir) = installer_dir(&root, id) else {
+            dl.push(json!({ "id": id, "ok": false, "message": "identifiant de paquet invalide" }));
+            continue;
+        };
         let _ = std::fs::create_dir_all(&dir);
         let r = crate::winget::download(id, &dir, cancel, &|l| progress(json!({ "step": "installers", "label": id, "index": i + 1, "total": ids.len(), "line": l })));
         let (ok, message) = r.unwrap_or_else(|e| (false, e));

@@ -61,6 +61,14 @@ pub fn run(mode: Mode, args: &[String]) {
         return;
     }
 
+    let webview_dir = match crate::win::operation_data_dir() {
+        Ok(dir) => dir.join("WebView2-Setup"),
+        Err(e) => {
+            crate::runtime::webview_failed(&e);
+            return;
+        }
+    };
+
     let event_loop = EventLoopBuilder::<Ev>::with_user_event().build();
     let proxy = event_loop.create_proxy();
     let title = crate::langue::tr(if mode == Mode::Setup { "Installer la Boîte à outils" } else { "Boîte à outils — désinstaller ou réparer" });
@@ -74,7 +82,7 @@ pub fn run(mode: Mode, args: &[String]) {
     crate::dark_title_bar(window.hwnd() as isize);
     let p = proxy.clone();
     let png = crate::icon_png();
-    let mut ctx = wry::WebContext::new(Some(std::env::temp_dir().join("BoiteAOutilsSetup")));
+    let mut ctx = wry::WebContext::new(Some(webview_dir));
     let webview = WebViewBuilder::new_with_web_context(&mut ctx)
         .with_background_color((14, 16, 24, 255))
         .with_custom_protocol("bao".into(), move |_id, req| {
