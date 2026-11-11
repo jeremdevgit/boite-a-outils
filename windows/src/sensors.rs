@@ -197,21 +197,21 @@ struct PdhValues {
 impl Pdh {
     fn open() -> Option<Pdh> {
         unsafe {
-            let mut q = 0isize;
+            let mut q: windows_sys::Win32::System::Performance::PDH_HQUERY = std::ptr::null_mut();
             if PdhOpenQueryW(std::ptr::null(), 0, &mut q) != 0 {
                 return None;
             }
             let add = |p: &str| {
                 let w = crate::win::w(p);
-                let mut c = 0isize;
+                let mut c: windows_sys::Win32::System::Performance::PDH_HCOUNTER = std::ptr::null_mut();
                 if PdhAddEnglishCounterW(q, w.as_ptr(), 0, &mut c) == 0 {
-                    c
+                    c as isize
                 } else {
                     0
                 }
             };
             let p = Pdh {
-                q,
+                q: q as isize,
                 time: add("\\Processor Information(*)\\% Processor Time"),
                 perf: add("\\Processor Information(*)\\% Processor Performance"),
                 nominal: add("\\Processor Information(_Total)\\Processor Frequency"),
@@ -229,13 +229,13 @@ impl Pdh {
         }
         unsafe {
             let (mut size, mut count) = (0u32, 0u32);
-            PdhGetFormattedCounterArrayW(c, PDH_FMT_DOUBLE | 0x8000, &mut size, &mut count, std::ptr::null_mut());
+            PdhGetFormattedCounterArrayW(c as _, PDH_FMT_DOUBLE | 0x8000, &mut size, &mut count, std::ptr::null_mut());
             if size == 0 {
                 return Vec::new();
             }
             let mut buf = vec![0u8; size as usize];
             let items = buf.as_mut_ptr() as *mut PDH_FMT_COUNTERVALUE_ITEM_W;
-            if PdhGetFormattedCounterArrayW(c, PDH_FMT_DOUBLE | 0x8000, &mut size, &mut count, items) != 0 {
+            if PdhGetFormattedCounterArrayW(c as _, PDH_FMT_DOUBLE | 0x8000, &mut size, &mut count, items) != 0 {
                 return Vec::new();
             }
             std::slice::from_raw_parts(items, count as usize)
@@ -252,7 +252,7 @@ impl Pdh {
     }
 
     fn read(&mut self) -> PdhValues {
-        unsafe { PdhCollectQueryData(self.q) };
+        unsafe { PdhCollectQueryData(self.q as _) };
         PdhValues {
             time: Self::array(self.time),
             perf: Self::array(self.perf),

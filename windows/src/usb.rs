@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use windows_sys::core::GUID;
 use windows_sys::Win32::Devices::DeviceAndDriverInstallation::*;
-use windows_sys::Win32::Devices::Properties::DEVPROPKEY;
+use windows_sys::Win32::Foundation::DEVPROPKEY;
 use windows_sys::Win32::Devices::Usb::*;
 use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::Storage::FileSystem::*;

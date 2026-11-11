@@ -78,18 +78,18 @@ fn net_bytes() -> (u64, u64) {
 /// Compteur « Moteur GPU 3D » (somme sur les processus) ; 0 si indisponible.
 fn gpu_open() -> (isize, isize) {
     unsafe {
-        let mut q = 0isize;
+        let mut q: windows_sys::Win32::System::Performance::PDH_HQUERY = std::ptr::null_mut();
         if PdhOpenQueryW(std::ptr::null(), 0, &mut q) != 0 {
             return (0, 0);
         }
         let path = crate::win::w("\\GPU Engine(*engtype_3D)\\Utilization Percentage");
-        let mut c = 0isize;
+        let mut c: windows_sys::Win32::System::Performance::PDH_HCOUNTER = std::ptr::null_mut();
         if PdhAddEnglishCounterW(q, path.as_ptr(), 0, &mut c) != 0 {
             PdhCloseQuery(q);
             return (0, 0);
         }
         PdhCollectQueryData(q);
-        (q, c)
+        (q as isize, c as isize)
     }
 }
 
@@ -98,12 +98,12 @@ fn gpu_read(q: isize, c: isize) -> Option<f64> {
         return None;
     }
     unsafe {
-        if PdhCollectQueryData(q) != 0 {
+        if PdhCollectQueryData(q as _) != 0 {
             return None;
         }
         let (mut size, mut count) = (0u32, 0u32);
         PdhGetFormattedCounterArrayW(
-            c,
+            c as _,
             PDH_FMT_DOUBLE,
             &mut size,
             &mut count,
@@ -114,7 +114,7 @@ fn gpu_read(q: isize, c: isize) -> Option<f64> {
         }
         let mut buf = vec![0u8; size as usize];
         let items = buf.as_mut_ptr() as *mut PDH_FMT_COUNTERVALUE_ITEM_W;
-        if PdhGetFormattedCounterArrayW(c, PDH_FMT_DOUBLE, &mut size, &mut count, items) != 0 {
+        if PdhGetFormattedCounterArrayW(c as _, PDH_FMT_DOUBLE, &mut size, &mut count, items) != 0 {
             return None;
         }
         let sum: f64 = std::slice::from_raw_parts(items, count as usize)

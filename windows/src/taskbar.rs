@@ -9,7 +9,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use windows_sys::Win32::Foundation::{BOOL, HWND, LPARAM};
+use windows_sys::core::BOOL;
+use windows_sys::Win32::Foundation::{HWND, LPARAM};
 use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
