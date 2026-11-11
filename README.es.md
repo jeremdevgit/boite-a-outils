@@ -140,12 +140,15 @@ Componentes de terceros (carpeta [licences-tiers](licences-tiers/)):
 
 Todos libres, gratuitos y sin publicidad — [github.com/jeremdevgit](https://github.com/jeremdevgit):
 
-| Programa | Para | En resumen |
+| Programa | Plataforma | En resumen |
 |---|---|---|
-| [Carnet de notes](https://github.com/jeremdevgit/carnet-rust) | Windows | notas locales cifradas y sincronización Joplin/Nextcloud experimental · [descargar ZIP](https://github.com/jeremdevgit/carnet-rust/releases/latest) |
-| [JMeca](https://github.com/jeremdevgit/jmeca) | Windows, macOS, Linux | mantenimiento de vehículos cifrado, carpetas de clientes, historial y consumo |
-| [Pomme](https://github.com/jeremdevgit/pomme) | Windows | reproductor de Apple Music y música local |
-| [rJb](https://github.com/jeremdevgit/rjb) | Windows | la iluminación RGB de todos tus dispositivos en una sola aplicación |
-| [Ludothèque](https://github.com/jeremdevgit/ludotheque) | macOS | todos tus juegos en un solo lanzador |
-| [Suite Libre](https://jeremdevgit.github.io/suite-libre/) | navegador | seis herramientas sin cuenta: códigos QR, desenfoque, fotos, conversiones, promedios, contraseñas |
-| [Batailles de France](https://github.com/jeremdevgit/batailles-de-france) | navegador | juego de estrategia en tiempo real sobre los mapas de cinco ciudades francesas |
+| [AutoDex](https://github.com/jeremdevgit/autodex) | Windows, macOS, Linux | Juego de colección de coches con reconocimiento de fotos en el dispositivo |
+| [Carnet de notes](https://github.com/jeremdevgit/carnet-rust) | Windows | Cuadernos cifrados y sincronización experimental |
+| [Decklight](https://github.com/jeremdevgit/decklight) | Windows, macOS, Linux | Stream Deck virtual con control USB |
+| [JMeca](https://github.com/jeremdevgit/jmeca) | Windows, macOS, Linux | Seguimiento de mantenimiento de vehículos cifrado |
+| [LJ Hub](https://github.com/jeremdevgit/lj-hub) | Windows, macOS, Linux | Gestor de perfiles para dispositivos Logitech |
+| [Pomme](https://github.com/jeremdevgit/pomme) | Windows | Reproductor de música para Apple Music y archivos locales |
+| [rJb](https://github.com/jeremdevgit/rjb) | Windows | Control de la iluminación RGB |
+| [Ludothèque](https://github.com/jeremdevgit/ludotheque) | macOS | Biblioteca y lanzador de juegos |
+| [Suite Libre](https://jeremdevgit.github.io/suite-libre/) | Navegador | Seis herramientas sin cuenta |
+| [Batailles de France](https://github.com/jeremdevgit/batailles-de-france) | Navegador | Juego de estrategia en tiempo real |
