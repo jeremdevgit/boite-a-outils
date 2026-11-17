@@ -1,154 +1,93 @@
-<p align="center"><img src="captures/icone-windows.png" width="96" alt=""> <img src="captures/icone-macos.png" width="96" alt=""></p>
+<p align="center"><img src="captures/icone-windows.png" width="112" alt=""> <img src="captures/icone-macos.png" width="112" alt=""></p>
 
-# Boîte à outils
+<h1 align="center">Boîte à outils</h1>
 
-[English](README.md) · [Français](README.fr.md) · **Español**
+<p align="center"><b>Cuida tu ordenador sin romper nada: limpieza, arranque, hardware, sensores, búsqueda de archivos; todo se puede deshacer.</b></p>
 
-**Cuida tu ordenador sin romper nada, en Windows y en Mac.** Inicio, servicios, limpieza, archivos grandes, ajustes ocultos, hardware, sensores, reparaciones: todo se explica con claridad, nada se modifica sin tu consentimiento y cada cambio se puede deshacer desde el Historial.
+<p align="center"><img src="https://img.shields.io/badge/%F0%9F%9B%A0%EF%B8%8F%20System%20%26%20hardware-Windows%20%C2%B7%20macOS-2f6fde?style=flat-square" alt="Sistema y hardware"> <a href="https://github.com/jeremdevgit/boite-a-outils/releases"><img src="https://img.shields.io/github/v/release/jeremdevgit/boite-a-outils?include_prereleases&style=flat-square&label=version" alt="version"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-555?style=flat-square" alt="GPL-3.0-or-later"></a> <a href="https://github.com/jeremdevgit/boite-a-outils/actions/workflows/windows.yml"><img src="https://github.com/jeremdevgit/boite-a-outils/actions/workflows/windows.yml/badge.svg" alt="CI"></a></p>
 
-**8 idiomas**: español, inglés, francés, alemán, italiano, portugués, chino y japonés. El idioma de Windows o del Mac se elige automáticamente. Para cambiarlo: en Windows, el menú de idiomas en la parte inferior de la barra lateral (al instante); en Mac, *Ajustes ocultos › Boîte à outils › Idioma* (en el próximo inicio, con un botón Reiniciar).
+<p align="center"><a href="README.md">English</a> · <a href="README.fr.md">Français</a> · <b>Español</b> · <a href="README.de.md">Deutsch</a> · <a href="README.it.md">Italiano</a> · <a href="README.pt.md">Português</a> · <a href="README.zh.md">简体中文</a> · <a href="README.ja.md">日本語</a></p>
 
-Dos aplicaciones nativas, una para cada sistema, reunidas en este repositorio:
+<p align="center"><a href="https://github.com/jeremdevgit/boite-a-outils/releases/latest"><b>⬇ Descargar</b></a></p>
 
-| | Windows 10 y 11 | macOS 14 o posterior |
-|---|---|---|
-| Carpeta | [`windows/`](windows/) (Rust, interfaz web WebView2) | [`macos/`](macos/) (Swift, SwiftUI) |
-| Descargar | `BoiteAOutils-Setup.exe` | `Boite-a-outils-<versión>.pkg` o `.dmg` |
+![Boîte à outils en Windows](captures/en/windows-accueil.png)
 
-👉 **[Descargar la última versión](https://github.com/jeremdevgit/boite-a-outils/releases/latest)**
+Boîte à outils explica cada ajuste con palabras sencillas, no cambia nada sin tu permiso y anota cada cambio en un **Historial** que se deshace con un clic. En este repositorio hay dos aplicaciones nativas: una para **Windows 10/11** ([`windows/`](windows/), Rust + WebView2) y otra para **macOS 14+** ([`macos/`](macos/), Swift + SwiftUI).
 
-![Inicio de la Boîte à outils en Windows](captures/en/windows-accueil.png)
+## De un vistazo
 
----
-
-## Búsqueda de archivos y filtros
-
-La pestaña **Búsqueda de archivos**, en Windows y macOS, encuentra archivos y carpetas por su nombre o ruta completa. Elige una carpeta o unidad, crea su índice local y busca con varias palabras o comodines (`*.pdf`, `informe?`). Filtra por archivos/carpetas, tamaño o fecha de modificación, ordena los resultados, muestra un elemento en el Explorador/Finder o copia su ruta.
-
-El primer análisis puede tardar varios minutos. El índice permanece en memoria durante la sesión de la aplicación; reconstrúyelo para incluir los cambios del disco. Se omiten las carpetas sin acceso y no se recorren enlaces. No se calculan tamaños de carpetas y se muestran hasta 500 resultados. No se envía ningún contenido ni ruta de archivo a Internet.
-
-Windows también incluye filtros en **Inicio, Servicios, Procesos, Aplicaciones, Sysinternals e Historial**, además de filtros de tamaño para instaladores y archivos olvidados. La selección en bloque afecta a la lista visible; cambiar el filtro de tamaño desmarca los elementos ocultos.
-
-![Búsqueda con datos de demostración](captures/en/windows-recherche.png)
-
-![Búsqueda de archivos en macOS](captures/en/macos-recherche.png)
-
-
-## Windows
-
-| Sección | Qué hace |
+| | |
 |---|---|
-| **Inicio, servicios, procesos** | Lo que se inicia con Windows (programas, tareas programadas, entradas rotas), servicios explicados uno por uno, procesos con su consumo. |
-| **Limpieza** | Cachés y archivos temporales de Windows, de los navegadores, de las aplicaciones y de los juegos. Los elementos marcados por defecto no tienen consecuencias; los demás se explican. |
-| **Archivos grandes y fantasma** | Lo que ocupa espacio, duplicados, versiones antiguas de aplicaciones, instaladores olvidados, accesos directos rotos, restos de programas desinstalados. |
-| **Hardware** | Procesador, memoria, tarjetas gráficas, discos (salud SMART), pantallas, puertos USB y cables, controladores, sensores (temperaturas, ventiladores), pruebas de estabilidad. |
-| **Rendimiento, personalización, ajustes** | Ajustes documentados y reversibles en un clic: juegos, energía, barra de tareas transparente, Explorador de archivos, privacidad, publicidad. Los «trucos» sin efecto medible aparecen con la razón por la que no se incluyen. |
-| **Salud y reparación** | Puntos de restauración, comprobación y reparación de Windows (SFC, DISM), herramientas Sysinternals, copia de seguridad limpia, instalación de los programas esenciales (winget). |
-| **Historial** | Cada cambio queda registrado y se deshace en un clic. |
-| **Mis programas** | Mis otros programas, con el enlace de descarga oficial. |
+| **Categoría** | 🛠️ Sistema y hardware |
+| **Plataformas** | Windows · macOS |
+| **Interfaz** | 8 idiomas (EN, FR, ES, DE, IT, PT, ZH, JA) |
+| **Precio** | Gratis, de código abierto, sin anuncios ni telemetría |
+| **Estado** | Estable |
+| **Licencia** | [GPL-3.0-or-later](LICENSE) |
 
-<p><img src="captures/en/windows-nettoyage.png" alt="Limpieza" width="49%"> <img src="captures/en/windows-performances.png" alt="Rendimiento" width="49%"></p>
-<p><img src="captures/en/windows-mes-logiciels.png" alt="Mis programas" width="49%"> <img src="captures/en/windows-installateur.png" alt="Instalador: actualización sobre la versión anterior" width="30%"></p>
+## Qué hace
 
-### Instalar
+| Área | Windows | macOS |
+|---|---|---|
+| **Arranque y procesos** | Programas, tareas programadas, servicios explicados uno a uno, entradas rotas | Elementos de inicio, agentes, procesos |
+| **Limpieza** | Cachés de Windows, navegadores, apps y juegos; solo se marca lo seguro | Limpieza del sistema, privacidad del navegador, proyectos de desarrollo |
+| **Espacio en disco** | Archivos grandes, duplicados, versiones antiguas, instaladores olvidados, restos | Archivos grandes, duplicados, desinstalador completo, restos huérfanos |
+| **Búsqueda de archivos** | Índice local por nombre o ruta, comodines, filtros de tamaño y fecha | Igual, al estilo Finder |
+| **Hardware** | CPU, RAM, GPU, salud SMART, pantallas, cables USB, controladores, sensores, pruebas de estabilidad | Sensores, discos, pantallas, batería, cables y puertos USB-C |
+| **Ajustes** | Ajustes documentados y reversibles (juegos, energía, Explorador, privacidad, anuncios) | Ajustes ocultos, interruptores, ventanas, portapapeles, red |
+| **Reparación** | Puntos de restauración, SFC/DISM, Sysinternals, apps esenciales con winget | Mantenimiento, actualizaciones, seguridad |
 
-1. Descarga `BoiteAOutils-Setup.exe` desde las [Releases](https://github.com/jeremdevgit/boite-a-outils/releases/latest) y ejecútalo.
-2. **Una versión ya instalada se detecta y se desinstala automáticamente** durante la instalación de la nueva; se conservan el historial, las copias de seguridad y los ajustes.
-3. La aplicación se instala en *Archivos de programa* (carpeta que solo los administradores pueden modificar), con sus accesos directos y su entrada en *Configuración › Aplicaciones*.
+<p><img src="captures/en/windows-nettoyage.png" alt="Limpieza" width="49%"> <img src="captures/en/windows-recherche.png" alt="Búsqueda de archivos" width="49%"></p>
+<p><img src="captures/en/macos-capteurs.png" alt="Sensores en macOS" width="49%"> <img src="captures/en/macos-interrupteurs-sombre.png" alt="Interruptores, modo oscuro" width="49%"></p>
 
-El ejecutable no está firmado con un certificado de pago: la primera vez, Windows SmartScreen puede mostrar «Windows protegió su PC». Haz clic en **Más información** y luego en **Ejecutar de todas formas**. Para verificar el archivo: `Get-FileHash .\BoiteAOutils-Setup.exe` y compáralo con `SHA256SUMS-windows.txt`.
+La búsqueda crea un índice local de la carpeta o unidad elegida (el primer análisis puede tardar unos minutos), muestra hasta 500 resultados y nunca envía rutas ni contenidos a Internet. Los módulos de macOS se detallan en [`macos/README.md`](macos/README.md) (en francés).
 
-Instalación silenciosa: `BoiteAOutils-Setup.exe /S`.
+## Instalar
 
----
+**Windows**: descarga `BoiteAOutils-Setup.exe` de la [última versión](https://github.com/jeremdevgit/boite-a-outils/releases/latest) y ejecútalo. Una versión ya instalada se detecta y se reemplaza automáticamente; se conservan historial, copias y ajustes. Instalación silenciosa: `BoiteAOutils-Setup.exe /S`. El ejecutable no está firmado con un certificado de pago: si aparece SmartScreen, elige **Más información › Ejecutar de todas formas**. Compruébalo con `Get-FileHash` y `SHA256SUMS-windows.txt`.
 
-## macOS
+**macOS**: el `.pkg` (recomendado) cierra y reemplaza la versión anterior; el `.dmg` se instala arrastrando. La app no está notarizada: la primera vez, **clic derecho › Abrir**. Después concede el *Acceso total al disco* (la página **Permisos** te guía). Comprobación: `shasum -a 256 -c SHA256SUMS-macos.txt --ignore-missing`.
 
-Panel principal, limpieza del sistema, privacidad de los navegadores, espacio en disco, archivos grandes, duplicados, proyectos de desarrollo, desinstalador completo, restos huérfanos, inicio, procesos, mantenimiento, actualizaciones, ajustes ocultos, interruptores, personalización, organización de ventanas, portapapeles, red, batería, cables USB-C, sensores, discos, pantallas, seguridad, utilidades… El detalle de los módulos está en [`macos/README.md`](macos/README.md) (en francés).
+## Seguridad y privacidad
 
-<p><img src="captures/en/macos-capteurs.png" alt="Sensores" width="49%"> <img src="captures/en/macos-interrupteurs-sombre.png" alt="Interruptores, en modo oscuro" width="49%"></p>
-<p><img src="captures/en/macos-reglages-caches.png" alt="Ajustes ocultos" width="49%"> <img src="captures/en/macos-mes-logiciels.png" alt="Mis programas" width="49%"></p>
-<p><img src="captures/en/macos-autorisations.png" alt="Permisos" width="49%"> <img src="captures/en/macos-ports.png" alt="Cables y puertos" width="49%"></p>
-
-### Instalar
-
-- **Paquete `.pkg` (recomendado)**: doble clic y seguir el asistente. **La versión anterior se cierra y se elimina automáticamente** antes de instalar; se conservan tus ajustes y tu historial.
-- **Imagen `.dmg`**: arrastra «Boîte à outils» a la carpeta Aplicaciones (el Finder ofrece sustituir la versión anterior).
-
-La app no está notarizada por Apple: la primera vez, haz **clic derecho › Abrir**, o *Ajustes del Sistema › Privacidad y seguridad › Abrir igualmente*. Para comprobar los archivos: `shasum -a 256 -c SHA256SUMS-macos.txt --ignore-missing`.
-
-Recomendado después: *Ajustes del Sistema › Privacidad y seguridad › Acceso total al disco* → añade «Boîte à outils» (la página **Permisos** de la aplicación te guía paso a paso).
-
----
-
-## Privacidad y seguridad
-
-- **Sin telemetría, sin cuenta, sin publicidad.** No se envía nada: todo se analiza en el ordenador.
-- **Nada se modifica sin confirmación**; las eliminaciones pasan por la Papelera cuando es posible y quedan registradas en el Historial.
-- **Windows**: se propone un punto de restauración antes del primer cambio; instalación en una carpeta protegida; bibliotecas del sistema cargadas solo desde System32 (sin secuestro de DLL desde la carpeta Descargas); páginas de la interfaz servidas desde el ejecutable, comandos nativos aceptados solo desde la interfaz; enlaces externos abiertos con los permisos del usuario, nunca como administrador.
-- **Servicios contactados, solo cuando lo pides**: catálogo de Microsoft Update (controladores), live.sysinternals.com (herramientas Sysinternals), winget (programas esenciales), sitios de los fabricantes (enlaces), VirusTotal (huella de un archivo, en el navegador, macOS), api.ipify.org («Mostrar la IP pública», macOS), prueba de velocidad de Apple `networkQuality` (macOS).
-
-¿Has encontrado una vulnerabilidad? Lee [SECURITY.md](SECURITY.md) antes de abrir una incidencia pública.
-
----
+- **Sin telemetría, sin cuenta, sin anuncios.** Todo se analiza en el ordenador.
+- **Nada cambia sin confirmación.** Lo eliminado va a la Papelera cuando es posible; en Windows se ofrece un punto de restauración antes del primer cambio.
+- Instalada en una carpeta que solo pueden modificar los administradores; DLL del sistema cargadas solo desde System32; enlaces externos abiertos con tus permisos, nunca como administrador.
+- Servicios en línea solo cuando lo pides: catálogo de Microsoft Update, live.sysinternals.com, winget, webs de fabricantes, VirusTotal (hash de un archivo, macOS), api.ipify.org y `networkQuality` de Apple (macOS).
 
 ## Compilar
 
-**Windows** — requisitos: [Rust](https://rustup.rs) estable y las *Build Tools* de Visual Studio (componente «Desarrollo para el escritorio con C++»).
-
 ```powershell
+# Windows — Rust estable + Visual Studio Build Tools (C++)
 cd windows
-cargo build --release              # target\release\BoiteAOutils.exe
-.\tools\release.ps1                # versión distribuida + comprobaciones (ninguna ruta ni identificador de la máquina, sin dependencia del Runtime de Visual C++)
+cargo build --release
+.\tools\release.ps1          # instalador distribuido + comprobaciones
 ```
-
-Las versiones publicadas se compilan con GitHub Actions ([`.github/workflows/windows.yml`](.github/workflows/windows.yml)) con este mismo script.
-
-**macOS** — requisitos: macOS 14+, Xcode o las Command Line Tools.
 
 ```sh
+# macOS 14+ — Xcode o Command Line Tools
 cd macos
-./build.sh                         # build/Boîte à outils.app (universal Apple Silicon + Intel)
-./make_installer.sh                # dist/*.pkg, dist/*.dmg y SHA256SUMS-macos.txt
-./Tests/run_tests.sh               # pruebas funcionales (no modifican ningún dato)
+./build.sh                   # app universal (Apple Silicon + Intel)
+./make_installer.sh          # .pkg, .dmg y sumas de control
+./Tests/run_tests.sh
 ```
 
-## Estructura del repositorio
-
-```
-windows/src/        programa de Windows (Rust): ventana, instalador, limpieza, hardware, sensores…
-windows/ui/         interfaz (HTML, CSS, JavaScript sin framework)
-windows/ps/         scripts de PowerShell llamados por la interfaz (lectura y ajustes de Windows)
-windows/assets/     módulos del controlador PawnIO (lectura de los sensores de la placa base)
-windows/tools/      compilación de la versión distribuida
-macos/Sources/      aplicación de macOS (SwiftUI)
-macos/Resources/    icono, Info.plist, scripts del paquete de instalación
-captures/           capturas de pantalla (datos de demostración)
-licences-tiers/     licencias de los componentes de terceros
-```
+Las versiones publicadas se compilan con GitHub Actions ([`windows.yml`](.github/workflows/windows.yml)).
 
 ## Licencia
 
-Código bajo licencia **GNU GPL v3 o posterior**: consulta [LICENSE](LICENSE). Copyright © 2026 jeremdevgit.
+GNU GPL v3 o posterior — ver [LICENSE](LICENSE). Componentes de terceros en [`licences-tiers/`](licences-tiers/): módulos [PawnIO](https://github.com/namazso/PawnIO.Modules) (LGPL-2.1, sensores en Windows) y código USB Power Delivery / SMC adaptado de WhatCable (MIT, macOS).
 
-Componentes de terceros (carpeta [licences-tiers](licences-tiers/)):
+---
 
-- módulos del controlador [PawnIO](https://github.com/namazso/PawnIO.Modules) (Windows): licencia LGPL-2.1, código fuente en github.com/namazso/PawnIO.Modules;
-- decodificación de USB Power Delivery y acceso al SMC adaptados de WhatCable (macOS): licencia MIT.
+¿Has encontrado una vulnerabilidad? Infórmala en privado (consulta [SECURITY.md](SECURITY.md)) y no en una incidencia pública.
 
-## Mis otros programas
+## Más software libre de jeremdevgit
 
-Todos libres, gratuitos y sin publicidad — [github.com/jeremdevgit](https://github.com/jeremdevgit):
+Todos gratuitos, de código abierto y sin anuncios.
 
-| Programa | Plataforma | En resumen |
-|---|---|---|
-| [AutoDex](https://github.com/jeremdevgit/autodex) | Windows, macOS, Linux | Juego de colección de coches con reconocimiento de fotos en el dispositivo |
-| [Carnet de notes](https://github.com/jeremdevgit/carnet-rust) | Windows | Cuadernos cifrados y sincronización experimental |
-| [Decklight](https://github.com/jeremdevgit/decklight) | Windows, macOS, Linux | Stream Deck virtual con control USB |
-| [JMeca](https://github.com/jeremdevgit/jmeca) | Windows, macOS, Linux | Seguimiento de mantenimiento de vehículos cifrado |
-| [LJ Hub](https://github.com/jeremdevgit/lj-hub) | Windows, macOS, Linux | Gestor de perfiles para dispositivos Logitech |
-| [Pomme](https://github.com/jeremdevgit/pomme) | Windows | Reproductor de música para Apple Music y archivos locales |
-| [rJb](https://github.com/jeremdevgit/rjb) | Windows | Control de la iluminación RGB |
-| [Ludothèque](https://github.com/jeremdevgit/ludotheque) | macOS | Biblioteca y lanzador de juegos |
-| [Suite Libre](https://jeremdevgit.github.io/suite-libre/) | Navegador | Seis herramientas sin cuenta |
-| [Batailles de France](https://github.com/jeremdevgit/batailles-de-france) | Navegador | Juego de estrategia en tiempo real |
+**🛠️ Sistema y hardware** — [rJb](https://github.com/jeremdevgit/rjb) · [LJ Hub](https://github.com/jeremdevgit/lj-hub) · [Decklight](https://github.com/jeremdevgit/decklight)
+
+**📒 Productividad y datos** — [Carnet de notes](https://github.com/jeremdevgit/carnet-rust) · [JMeca](https://github.com/jeremdevgit/jmeca) · [Suite Libre](https://jeremdevgit.github.io/suite-libre/)
+
+**🎮 Música y juegos** — [Pomme](https://github.com/jeremdevgit/pomme) · [Ludothèque](https://github.com/jeremdevgit/ludotheque) · [AutoDex](https://github.com/jeremdevgit/autodex) · [Batailles de France](https://github.com/jeremdevgit/batailles-de-france)
